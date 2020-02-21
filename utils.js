@@ -23,7 +23,7 @@ a=cmid:1
 m=audio ${local_rtp_port} RTP/AVP 0
 a=rtpmap:0 PCMU/8000
 a=${resource_type == 'speechsynth' ? 'recvonly' : 'sendonly'}
-a=mid:1`
+a=mid:1`.replace(/\n/g, "\r\n")
 }
 
 
