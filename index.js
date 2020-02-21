@@ -9,6 +9,9 @@ const RtpSession = require('rtp-session')
 
 const mrcp = require('mrcp')
 
+const Speaker = require('speaker')
+
+const lu = require('./linear_ulaw')
 
 const usage = () => {
 	console.log(`
@@ -139,6 +142,12 @@ sip_stack.send(
 					console.error("Could not get correct SDP answer")
 					process.exit(1)
 				}
+
+				rtp_session.set_remote_end_point(data.remote_ip, data.remote_rtp_port)
+
+				rtp_session.on('data', data => {
+					console.log('rtp packet')
+				})
 
 				var client = mrcp.createClient({
 					host: data.remote_ip,
