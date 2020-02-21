@@ -1,18 +1,22 @@
 const sip = require('sip')
 const config = require('config')
 
-const utils = require('utils')
+const utils = require('./utils')
 
 const args = require('yargs').argv
+
+const RtpSession = require('rtp-session')
+
+const mrcp = require('mrcp')
 
 
 const usage = () => {
 	console.log(`
-Usage: node ${args.$0} resource_type server_host server_port
-Ex:    node ${args.$0} synth 192.168.1.1 5060
+Usage: node ${args.$0} resource_type server_sip_host server_sip_port
+Ex:    node ${args.$0} speechsynth 192.168.1.1 5060
 
 Details:
-  resource_type: synth | recog
+  resource_type: speechsynth | speechrecog
 `)
 }
 
@@ -24,17 +28,23 @@ if(args._.length != 3) {
 }
 
 const resource_type = args._[0]
-const server_host = args._[1]
-const server_port = args._[2]
+const server_sip_host = args._[1]
+const server_sip_port = args._[2]
+
+args['language'] = 'en-US'
+args['voice'] = 'rms'
+args['text'] = 'Hello world'
 
 
 const local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
-const local_port = config.local_port ? config.local_port : 5090
+const local_sip_port = config.local_sip_port ? config.local_sip_port : 5090
+const local_rtp_port = config.local_rtp_port ? config.local_rtp_port : 10000
 
+const dialogs = {}
 
 const sip_stack = sip.create({
 		address: local_ip,
-		port: local_port,
+		port: local_sip_port,
 	},
 
 	(req) => {
@@ -44,34 +54,46 @@ const sip_stack = sip.create({
 )
 
 
-const sip_uri = `sip:${server_host}:${server_port}`
+const rtp_session = new RtpSession({})
+rtp_session.on('error', (err) => {
+	console.error(err)
+	process.exit(1)
+})
 
-sip.send(
+rtp_session.set_local_end_point(local_ip, local_rtp_port)
+
+const sip_uri = `sip:${server_sip_host}:${server_sip_port}`
+
+sip_stack.send(
 	{
 		method: 'INVITE',
 		uri: sip_uri,
 		headers: {
 			to: {uri: sip_uri},
-			from: {uri: `sip:mrcp_client@${local_ip}:${local_port}`, params: {tag: utils.rstring()}},
+			from: {uri: `sip:mrcp_client@${local_ip}:${local_sip_port}`, params: {tag: utils.rstring()}},
 			'call-id': utils.rstring(),
 			cseq: {method: 'INVITE', seq: Math.floor(Math.random() * 1e5)},
 			'content-type': 'application/sdp',
-			contact: [{uri: `sip:mrcp_client@${local_ip}:${local_port}`}],
+			contact: [{uri: `sip:mrcp_client@${local_ip}:${local_sip_port}`}],
 		},
-		content: utils.gen_sdp(resource_type, local_rtp_ip, local_rtp_port),
+		content: utils.gen_sdp(resource_type, local_ip, local_rtp_port),
 	},
 	function(rs) {
+		console.log(rs)
+
 		if(rs.status >= 300) {
-			console.log('call failed with status ' + rs.status);  
+			console.log('call failed with status ' + rs.status)  
 		}
 		else if(rs.status < 200) {
-			console.log('call progress status ' + rs.status);
+			console.log('call progress status ' + rs.status)
 		} else {
 			// yes we can get multiple 2xx response with different tags
-			console.log('call answered with tag ' + rs.headers.to.params.tag);
+			console.log('call answered with tag ' + rs.headers.to.params.tag)
+
+			console.log("P1")
 
 			// sending ACK
-			sip.send({
+			sip_stack.send({
 				method: 'ACK',
 				uri: rs.headers.contact[0].uri,
 				headers: {
@@ -81,24 +103,71 @@ sip.send(
 					cseq: {method: 'ACK', seq: rs.headers.cseq.seq},
 					via: []
 				}
-			});
+			})
 
-			var id = [rs.headers['call-id'], rs.headers.from.params.tag, rs.headers.to.params.tag].join(':');
+			console.log("P2")
+			var id = [rs.headers['call-id'], rs.headers.from.params.tag, rs.headers.to.params.tag].join(':')
 
-			// registring our 'dialog' which is just function to process in-dialog requests
-			if(!dialogs[id]) {
-				dialogs[id] = function(rq) {
-					if(rq.method === 'BYE') {
-						console.log('call received bye');
+			console.log("P3")
+			// registering our 'dialog' which is just function to process in-dialog requests
 
-						delete dialogs[id];
+			try {
+				if(!dialogs[id]) {
+					dialogs[id] = function(rq) {
+						if(rq.method === 'BYE') {
+							console.log('call received bye')
 
-						sip.send(sip.makeResponse(rq, 200, 'Ok'));
-					} else {
-						sip.send(sip.makeResponse(rq, 405, 'Method not allowed'));
+							delete dialogs[id]
+
+							sip_stack.send(sip.makeResponse(rq, 200, 'Ok'))
+						} else {
+							sip_stack.send(sip.makeResponse(rq, 405, 'Method not allowed'))
+						}
 					}
 				}
+			} catch(e) {
+				console.error(e)
+			}
+
+			console.log("P4")
+			var data = {}
+
+			try {
+				var answer_sdp = utils.parse_sdp(rs.content)
+				console.log(answer_sdp)
+				if(!utils.sdp_matcher(answer_sdp, data)) {
+					console.error("Could not get correct SDP answer")
+					process.exit(1)
+				}
+
+				var client = mrcp.createClient({
+					host: data.remote_ip,
+					port: data.remote_mrcp_port,
+				})
+
+				var request_id = 1
+
+				var msg = utils.build_mrcp_request('SPEAK', request_id, data.channel, args)
+				console.log('Sending MRCP requests. result: ', client.write(msg))
+				request_id++
+
+				client.on('error', (err) => {
+					console.error(err)
+					process.exit(1)
+				})
+
+				client.on('close', () => { console.log('mrcp client closed') })
+
+				client.on('data', data => {
+					console.log('***********************************************')
+					console.log('mrcp on data:')
+					console.log(data)
+					console.log()
+				})
+			} catch(e) {
+				console.error(`Failure when process answer SDP: ${e}`)
+				process.exit(1)
 			}
 		}
 	}
-);
+)
