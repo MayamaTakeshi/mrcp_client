@@ -11,6 +11,16 @@ const mrcp = require('mrcp')
 
 const Speaker = require('speaker')
 
+const speaker = new Speaker({
+	audioFormat: 1,
+	endianness: 'LE',
+	channels: 1,
+	sampleRate: 8000,
+	blockAlign: 2,
+	bitDepth: 16,
+	signed: true,
+})
+
 const lu = require('./linear_ulaw')
 
 const usage = () => {
@@ -36,6 +46,7 @@ const server_sip_port = args._[2]
 
 args['language'] = 'en-US'
 args['voice'] = 'rms'
+args['voice'] = 'en-US-Wavenet-E'
 args['text'] = 'Hello world'
 
 
@@ -62,6 +73,7 @@ rtp_session.on('error', (err) => {
 	console.error(err)
 	process.exit(1)
 })
+
 
 rtp_session.set_local_end_point(local_ip, local_rtp_port)
 
@@ -146,7 +158,18 @@ sip_stack.send(
 				rtp_session.set_remote_end_point(data.remote_ip, data.remote_rtp_port)
 
 				rtp_session.on('data', data => {
-					console.log('rtp packet')
+					//console.log('rtp packet')
+
+					var buf = Buffer.alloc(data.length * 2)
+
+					for(var i=0 ; i<data.length ; i++) {
+						// convert ulaw to L16 little-endian
+						var l = lu.ulaw2linear(data[i])
+						buf[i*2] = l & 0xFF
+						buf[i*2+1] = l >>> 8
+					}
+
+					speaker.write(buf)
 				})
 
 				var client = mrcp.createClient({
