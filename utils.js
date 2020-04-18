@@ -114,6 +114,9 @@ const build_mrcp_request = (message, request_id, channel_identifier, args) => {
 		headers['speech-language'] = args.language
 		headers['voice-name'] = args.voice
 		msg = mrcp.builder.build_request(message, request_id, headers, args.text)
+	} else if(message == 'RECOGNIZE') {
+		headers['speech-language'] = args.language
+		msg = mrcp.builder.build_request(message, request_id, headers, null)
 	} else {
 		console.error("IMPLEMENTATION PENDING")
 		process.exit(1)

@@ -9,52 +9,40 @@ const RtpSession = require('rtp-session')
 
 const mrcp = require('mrcp')
 
-const Speaker = require('speaker')
-
-const speaker = new Speaker({
-	audioFormat: 1,
-	endianness: 'LE',
-	channels: 1,
-	sampleRate: 8000,
-	blockAlign: 2,
-	bitDepth: 16,
-	signed: true,
-})
-
-const lu = require('./linear_ulaw')
+const fs = require('fs')
 
 const usage = () => {
 	console.log(`
-Usage: node ${args.$0} resource_type server_sip_host server_sip_port
-Ex:    node ${args.$0} speechsynth 192.168.1.1 5060
+Usage: node ${args.$0} server_sip_host server_sip_port
+Ex:    node ${args.$0} 127.0.0.1 8060
 
-Details:
-  resource_type: speechsynth | speechrecog
 `)
 }
 
 
-if(args._.length != 3) {
+if(args._.length != 2) {
 	console.error("Invalid number of arguments")
 	usage()
 	process.exit(1)
 }
 
-const resource_type = args._[0]
-const server_sip_host = args._[1]
-const server_sip_port = args._[2]
+const server_sip_host = args._[0]
+const server_sip_port = args._[1]
 
-args['language'] = 'en-US'
-args['voice'] = 'rms'
-args['voice'] = 'en-US-Wavenet-E'
-args['text'] = 'Hello world'
+const resource_type = 'speechrecog'
 
+args['language'] = 'ja-JP'
 
 const local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
 const local_sip_port = config.local_sip_port ? config.local_sip_port : 5090
 const local_rtp_port = config.local_rtp_port ? config.local_rtp_port : 10000
 
 const dialogs = {}
+
+const fd = fs.openSync("./artifacts/ohayou_gozaimasu.r-8000.e-mu-law.b-16.c-1.raw", "r")
+console.log(fd)
+
+var buffer = new Buffer(160)
 
 const sip_stack = sip.create({
 		address: local_ip,
@@ -157,21 +145,6 @@ sip_stack.send(
 
 				rtp_session.set_remote_end_point(data.remote_ip, data.remote_rtp_port)
 
-				rtp_session.on('data', data => {
-					//console.log('rtp packet')
-
-					var buf = Buffer.alloc(data.length * 2)
-
-					for(var i=0 ; i<data.length ; i++) {
-						// convert ulaw to L16 little-endian
-						var l = lu.ulaw2linear(data[i])
-						buf[i*2] = l & 0xFF
-						buf[i*2+1] = l >>> 8
-					}
-
-					speaker.write(buf)
-				})
-
 				var client = mrcp.createClient({
 					host: data.remote_ip,
 					port: data.remote_mrcp_port,
@@ -179,7 +152,7 @@ sip_stack.send(
 
 				var request_id = 1
 
-				var msg = utils.build_mrcp_request('SPEAK', request_id, data.channel, args)
+				var msg = utils.build_mrcp_request('RECOGNIZE', request_id, data.channel, args)
 				console.log('Sending MRCP requests. result: ', client.write(msg))
 				request_id++
 
@@ -195,6 +168,40 @@ sip_stack.send(
 					console.log('mrcp on data:')
 					console.log(data)
 					console.log()
+
+					var tid
+
+					if(data.type == 'response' && data.status_code == 200) { 
+						tid = setInterval(() => {
+							fs.read(fd, buffer, 0, 160, null, (err, bytesRead, data) => {
+								if(err) {
+									console.error(err)
+									clearInterval(tid)
+									tid = null
+								} else if(bytesRead == 0) {
+									console.log("no more data")
+									clearInterval(tid)
+									for(i=0 ;i<160; i++) {
+										buffer[i] = 0x7F
+									}
+									tid = setInterval(() => {
+										//console.log("sending silence")	
+										rtp_session.send_payload(buffer, 0, 0) 	
+									}, 20)
+								} else {
+									console.log(`got ${bytesRead} bytes:`)
+									console.log(data)
+									rtp_session.send_payload(buffer, 0, 0) 	
+								}
+							})
+						}, 20)
+					} else if (data.type == 'event' && data.event_name == 'RECOGNITION-COMPLETE') {
+						if(tid) {
+							clearInterval(tid)
+							tid = null
+						}
+					}
+
 				})
 			} catch(e) {
 				console.error(`Failure when process answer SDP: ${e}`)

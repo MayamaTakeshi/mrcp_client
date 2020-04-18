@@ -1,0 +1,34 @@
+==========================================================================================================
+2020/04/18 takeshi:
+
+Preparing mu-law raw file for google speech recognition.
+
+
+First I generated ohayou_gozaimasu.wav file using:
+
+http://open-jtalk.sp.nitech.ac.jp/index.php
+(voice: mei-normal)
+
+
+Checking the file:
+
+$ sox --i ohayou_gozaimasu.wav 
+
+Input File     : 'ohayou_gozaimasu.wav'
+Channels       : 1
+Sample Rate    : 48000
+Precision      : 16-bit
+Duration       : 00:00:02.05 = 98400 samples ~ 153.75 CDDA sectors
+File Size      : 197k
+Bit Rate       : 768k
+Sample Encoding: 16-bit Signed Integer PCM
+
+
+Then, I converted it to a raw file:
+
+$ sox ohayou_gozaimasu.wav -r 8000 -t raw -e mu-law ohayou_gozaimasu.r-8000.e-mu-law.b-16.c-1.raw
+
+
+And confirmed it is playable by doing:
+
+$ play -r 8000 -t raw -e mu-law -c 1 -r 8000 ohayou_gozaimasu.r-8000.e-mu-law.b-16.c-1.raw 
