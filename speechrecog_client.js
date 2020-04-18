@@ -199,12 +199,26 @@ sip_stack.send(
 							})
 						}, 20)
 					} else if (data.type == 'event' && data.event_name == 'RECOGNITION-COMPLETE') {
-						console.log(data.request_state)
-						console.log(tid)
 						if(tid) {
 							clearInterval(tid)
 							tid = null
 						}
+
+						// sending BYE
+						sip_stack.send({
+							method: 'BYE',
+							uri: rs.headers.contact[0].uri,
+							headers: {
+								to: rs.headers.to,
+								from: rs.headers.from,
+								'call-id': rs.headers['call-id'],
+								cseq: {method: 'BYE', seq: rs.headers.cseq.seq + 1},
+								via: []
+							}
+						}, (res) => {
+								console.log(`BYE got: ${res.status} ${res.reason}`)	
+								process.exit(0)
+						})
 					} else {
 						console.log("unexpected data")
 					}
