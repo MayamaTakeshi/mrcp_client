@@ -161,6 +161,8 @@ sip_stack.send(
 					process.exit(1)
 				})
 
+				var tid
+
 				client.on('close', () => { console.log('mrcp client closed') })
 
 				client.on('data', data => {
@@ -169,7 +171,6 @@ sip_stack.send(
 					console.log(data)
 					console.log()
 
-					var tid
 
 					if(data.type == 'response' && data.status_code == 200) { 
 						tid = setInterval(() => {
@@ -184,10 +185,12 @@ sip_stack.send(
 									for(i=0 ;i<160; i++) {
 										buffer[i] = 0x7F
 									}
+
 									tid = setInterval(() => {
 										//console.log("sending silence")	
 										rtp_session.send_payload(buffer, 0, 0) 	
 									}, 20)
+									console.log(tid)
 								} else {
 									console.log(`got ${bytesRead} bytes:`)
 									console.log(data)
@@ -196,10 +199,14 @@ sip_stack.send(
 							})
 						}, 20)
 					} else if (data.type == 'event' && data.event_name == 'RECOGNITION-COMPLETE') {
+						console.log(data.request_state)
+						console.log(tid)
 						if(tid) {
 							clearInterval(tid)
 							tid = null
 						}
+					} else {
+						console.log("unexpected data")
 					}
 
 				})
