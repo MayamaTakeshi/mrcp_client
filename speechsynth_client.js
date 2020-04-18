@@ -194,7 +194,9 @@ sip_stack.send(
 					console.log(data)
 					console.log()
 
-					if (data.type == 'event' && data.event_name == 'SPEAK-COMPLETE') {
+					if (data.type == 'response' && data.status_code == 200) {
+						console.log("command accepted")
+					} else if (data.type == 'event' && data.event_name == 'SPEAK-COMPLETE') {
 						// sending BYE
 						sip_stack.send({
 							method: 'BYE',
@@ -212,6 +214,7 @@ sip_stack.send(
 						})
 					} else {
 						console.log("unexpected data")
+						console.dir(data)
 					}
 
 				})
