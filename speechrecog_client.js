@@ -13,14 +13,14 @@ const fs = require('fs')
 
 const usage = () => {
 	console.log(`
-Usage: node ${args.$0} server_sip_host server_sip_port
-Ex:    node ${args.$0} 127.0.0.1 8060
+Usage: node ${args.$0} server_sip_host server_sip_port language audio_file
+Ex:    node ${args.$0} 127.0.0.1 8060 ja-JP artifacts/ohayou_gozaimasu.wav 
 
 `)
 }
 
 
-if(args._.length != 2) {
+if(args._.length != 4) {
 	console.error("Invalid number of arguments")
 	usage()
 	process.exit(1)
@@ -28,19 +28,16 @@ if(args._.length != 2) {
 
 const server_sip_host = args._[0]
 const server_sip_port = args._[1]
+args['language'] = args._[2]
+const audio_file = args._[3]
 
 const resource_type = 'speechrecog'
-
-args['language'] = 'ja-JP'
 
 const local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
 const local_sip_port = config.local_sip_port ? config.local_sip_port : 5090
 const local_rtp_port = config.local_rtp_port ? config.local_rtp_port : 10000
 
 const dialogs = {}
-
-const fd = fs.openSync("./artifacts/ohayou_gozaimasu.r-8000.e-mu-law.b-16.c-1.raw", "r")
-console.log(fd)
 
 var buffer = new Buffer(160)
 
@@ -93,8 +90,6 @@ sip_stack.send(
 			// yes we can get multiple 2xx response with different tags
 			console.log('call answered with tag ' + rs.headers.to.params.tag)
 
-			console.log("P1")
-
 			// sending ACK
 			sip_stack.send({
 				method: 'ACK',
@@ -108,10 +103,8 @@ sip_stack.send(
 				}
 			})
 
-			console.log("P2")
 			var id = [rs.headers['call-id'], rs.headers.from.params.tag, rs.headers.to.params.tag].join(':')
 
-			console.log("P3")
 			// registering our 'dialog' which is just function to process in-dialog requests
 
 			try {
@@ -132,7 +125,6 @@ sip_stack.send(
 				console.error(e)
 			}
 
-			console.log("P4")
 			var data = {}
 
 			try {
@@ -171,33 +163,50 @@ sip_stack.send(
 					console.log(data)
 					console.log()
 
-
 					if(data.type == 'response' && data.status_code == 200) { 
-						tid = setInterval(() => {
-							fs.read(fd, buffer, 0, 160, null, (err, bytesRead, data) => {
-								if(err) {
-									console.error(err)
-									clearInterval(tid)
-									tid = null
-								} else if(bytesRead == 0) {
-									console.log("no more data")
-									clearInterval(tid)
-									for(i=0 ;i<160; i++) {
-										buffer[i] = 0x7F
-									}
+						const { spawn } = require('child_process');
+						const ls = spawn('sox', [audio_file, "-r", "8000", "-t", "raw", "-e", "mu-law", "temp.raw"]);
 
-									tid = setInterval(() => {
-										//console.log("sending silence")	
+						ls.stdout.on('data', (data) => {
+						  console.log(`stdout: ${data}`);
+						});
+
+						ls.stderr.on('data', (data) => {
+						  console.error(`stderr: ${data}`);
+						});
+
+						ls.on('close', (code) => {
+							console.log(`child process exited with code ${code}`);
+
+							const fd = fs.openSync("temp.raw", "r")
+							console.log(fd)
+
+							tid = setInterval(() => {
+								fs.read(fd, buffer, 0, 160, null, (err, bytesRead, data) => {
+									if(err) {
+										console.error(err)
+										clearInterval(tid)
+										tid = null
+									} else if(bytesRead == 0) {
+										console.log("no more data")
+										clearInterval(tid)
+										for(i=0 ;i<160; i++) {
+											buffer[i] = 0x7F
+										}
+
+										tid = setInterval(() => {
+											//console.log("sending silence")	
+											rtp_session.send_payload(buffer, 0, 0) 	
+										}, 20)
+										console.log(tid)
+									} else {
+										console.log(`got ${bytesRead} bytes:`)
+										console.log(data)
 										rtp_session.send_payload(buffer, 0, 0) 	
-									}, 20)
-									console.log(tid)
-								} else {
-									console.log(`got ${bytesRead} bytes:`)
-									console.log(data)
-									rtp_session.send_payload(buffer, 0, 0) 	
-								}
-							})
-						}, 20)
+									}
+								})
+							}, 20)
+						})
 					} else if (data.type == 'event' && data.event_name == 'RECOGNITION-COMPLETE') {
 						if(tid) {
 							clearInterval(tid)
