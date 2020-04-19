@@ -82,13 +82,13 @@ sip_stack.send(
 		console.log(rs)
 
 		if(rs.status >= 300) {
-			console.log('call failed with status ' + rs.status)  
+			console.log('Call failed with status ' + rs.status)  
 		}
 		else if(rs.status < 200) {
-			console.log('call progress status ' + rs.status)
+			console.log('Call progress status ' + rs.status)
 		} else {
 			// yes we can get multiple 2xx response with different tags
-			console.log('call answered with tag ' + rs.headers.to.params.tag)
+			console.log('Call answered with tag ' + rs.headers.to.params.tag)
 
 			// sending ACK
 			sip_stack.send({
@@ -111,7 +111,7 @@ sip_stack.send(
 				if(!dialogs[id]) {
 					dialogs[id] = function(rq) {
 						if(rq.method === 'BYE') {
-							console.log('call received bye')
+							console.log('Call received bye')
 
 							delete dialogs[id]
 
@@ -179,7 +179,6 @@ sip_stack.send(
 							console.log(`child process exited with code ${code}`);
 
 							const fd = fs.openSync("temp.raw", "r")
-							console.log(fd)
 
 							tid = setInterval(() => {
 								fs.read(fd, buffer, 0, 160, null, (err, bytesRead, data) => {
@@ -188,7 +187,7 @@ sip_stack.send(
 										clearInterval(tid)
 										tid = null
 									} else if(bytesRead == 0) {
-										console.log("no more data")
+										console.log("No more data")
 										clearInterval(tid)
 										for(i=0 ;i<160; i++) {
 											buffer[i] = 0x7F
@@ -198,10 +197,9 @@ sip_stack.send(
 											//console.log("sending silence")	
 											rtp_session.send_payload(buffer, 0, 0) 	
 										}, 20)
-										console.log(tid)
 									} else {
-										console.log(`got ${bytesRead} bytes:`)
-										console.log(data)
+										console.log(`Fetched ${bytesRead} bytes from audio_file. Sending to MRCP server.`)
+										//console.log(data)
 										rtp_session.send_payload(buffer, 0, 0) 	
 									}
 								})
@@ -229,7 +227,7 @@ sip_stack.send(
 								process.exit(0)
 						})
 					} else {
-						console.log("unexpected data")
+						console.log("Unexpected data")
 					}
 
 				})

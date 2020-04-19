@@ -1,5 +1,6 @@
 const sip = require('sip')
 const config = require('config')
+const fs = require('fs')
 
 const utils = require('./utils')
 
@@ -25,13 +26,18 @@ const lu = require('./linear_ulaw')
 
 const usage = () => {
 	console.log(`
-Usage: node ${args.$0} server_sip_host server_sip_port
-Ex:    node ${args.$0} 127.0.0.1 8060
+Usage      : node ${args.$0} server_sip_host server_sip_port language voice text_or_file
+
+Examples:    node ${args.$0} 127.0.0.1 8060 ja-JP ja-JP-Wavenet-A "おはようございます."
+             node ${args.$0} 127.0.0.1 8060 ja-JP ja-JP-Wavenet-A @some_file.txt
+
+Details:
+	text: the text to be converted to speech. If the value starts with @, it will indicate a file containing the text to be converted.
 `)
 }
 
 
-if(args._.length != 2) {
+if(args._.length != 5) {
 	console.error("Invalid number of arguments")
 	usage()
 	process.exit(1)
@@ -39,14 +45,20 @@ if(args._.length != 2) {
 
 const server_sip_host = args._[0]
 const server_sip_port = args._[1]
+const language = args._[2]
+const voice = args._[3]
+var text = args._[4]
+
+if(text.startsWith("@")) {
+	const file_name = text.substr(1)
+	text = fs.readFileSync(file_name, "utf-8")
+}
 
 const resource_type = 'speechsynth'
 
-args['language'] = 'en-US'
-args['voice'] = 'rms'
-args['voice'] = 'en-US-Wavenet-E'
-args['text'] = 'Hello world'
-
+args['language'] = language
+args['voice'] = voice
+args['text'] = text
 
 const local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
 const local_sip_port = config.local_sip_port ? config.local_sip_port : 5090
@@ -198,20 +210,22 @@ sip_stack.send(
 						console.log("command accepted")
 					} else if (data.type == 'event' && data.event_name == 'SPEAK-COMPLETE') {
 						// sending BYE
-						sip_stack.send({
-							method: 'BYE',
-							uri: rs.headers.contact[0].uri,
-							headers: {
-								to: rs.headers.to,
-								from: rs.headers.from,
-								'call-id': rs.headers['call-id'],
-								cseq: {method: 'BYE', seq: rs.headers.cseq.seq + 1},
-								via: []
-							}
-						}, (res) => {
-								console.log(`BYE got: ${res.status} ${res.reason}`)	
-								process.exit(0)
-						})
+						setTimeout(() => {
+							sip_stack.send({
+								method: 'BYE',
+								uri: rs.headers.contact[0].uri,
+								headers: {
+									to: rs.headers.to,
+									from: rs.headers.from,
+									'call-id': rs.headers['call-id'],
+									cseq: {method: 'BYE', seq: rs.headers.cseq.seq + 1},
+									via: []
+								}
+							}, (res) => {
+									console.log(`BYE got: ${res.status} ${res.reason}`)	
+									process.exit(0)
+							})
+						}, 500)
 					} else {
 						console.log("unexpected data")
 						console.dir(data)
