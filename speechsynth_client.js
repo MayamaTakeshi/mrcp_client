@@ -26,13 +26,13 @@ const lu = require('./linear_ulaw')
 
 const usage = () => {
 	console.log(`
-Usage      : node ${args.$0} server_sip_host server_sip_port language voice text_or_file
+Usage:    node ${args.$0} server_sip_host server_sip_port language voice text_or_file
 
-Examples:    node ${args.$0} 127.0.0.1 8060 ja-JP ja-JP-Wavenet-A "おはようございます."
-             node ${args.$0} 127.0.0.1 8060 ja-JP ja-JP-Wavenet-A @some_file.txt
+Examples: node ${args.$0} 127.0.0.1 8060 ja-JP ja-JP-Wavenet-A "おはようございます."
+          node ${args.$0} 127.0.0.1 8060 ja-JP ja-JP-Wavenet-A @some_file.txt
 
 Details:
-	text: the text to be converted to speech. If the value starts with @, it will indicate a file containing the text to be converted.
+          text: the text to be converted to speech. If it starts with @, it will indicate a file containing the text to be converted.
 `)
 }
 
