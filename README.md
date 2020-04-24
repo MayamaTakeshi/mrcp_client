@@ -12,6 +12,12 @@ or
   yum install sox
 ```
 
+Then create config file:
+```
+  cp config/default.js.sample config/default.js
+  vim config/default.js # ajdust parameters as necessary (minimally, set the local_ip)
+```
+
 Then you can use either:
 ```
   node speechsynth_client.js

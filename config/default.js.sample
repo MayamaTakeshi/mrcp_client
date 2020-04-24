@@ -1,5 +1,5 @@
 module.exports = {
-	local_ip: '172.17.0.1',
+	local_ip: '192.168.1.2',
 	local_sip_port: 5090,
 	local_rtp_port: 10000,
 }

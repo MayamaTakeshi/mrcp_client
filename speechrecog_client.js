@@ -14,7 +14,7 @@ const fs = require('fs')
 const usage = () => {
 	console.log(`
 Usage: node ${args.$0} server_sip_host server_sip_port language audio_file
-Ex:    node ${args.$0} 127.0.0.1 8060 ja-JP artifacts/ohayou_gozaimasu.wav 
+Ex:    node ${args.$0} 192.168.1.1 8060 ja-JP artifacts/ohayou_gozaimasu.wav 
 
 `)
 }
