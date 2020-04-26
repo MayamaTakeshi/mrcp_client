@@ -137,7 +137,7 @@ sip_stack.send(
 				var request_id = 1
 
 				var msg = utils.build_mrcp_request('RECOGNIZE', request_id, data.channel, args)
-				console.log('Sending MRCP requests. result: ', client.write(msg))
+				console.log('Sending MRCP request. result: ', client.write(msg))
 				request_id++
 
 				client.on('error', (err) => {
@@ -149,15 +149,24 @@ sip_stack.send(
 
 				client.on('close', () => { console.log('mrcp client closed') })
 
-				client.on('data', data => {
+				client.on('data', d => {
 					console.log('***********************************************')
 					console.log('mrcp on data:')
-					console.log(data)
+					console.log(d)
 					console.log()
 
-					if(data.type == 'response' && data.status_code == 200) { 
+					if(d.type == 'response' && d.status_code == 200) { 
 						const { spawn } = require('child_process');
 						const ls = spawn('sox', [audio_file, "-r", "8000", "-t", "raw", "-e", "mu-law", "temp.raw"]);
+
+
+						// DEBUG CODE
+						/*
+						setTimeout(() => {
+							var msg = utils.build_mrcp_request('STOP', request_id+1, data.channel, args)
+							console.log('Sending MRCP request. result: ', client.write(msg))
+						}, 100)
+						*/
 
 						ls.stdout.on('data', (data) => {
 						  console.log(`stdout: ${data}`);
@@ -217,7 +226,7 @@ sip_stack.send(
 							})
 						}, 500)
 						*/
-					} else if (data.type == 'event' && data.event_name == 'RECOGNITION-COMPLETE') {
+					} else if (d.type == 'event' && d.event_name == 'RECOGNITION-COMPLETE') {
 						if(tid) {
 							clearInterval(tid)
 							tid = null
