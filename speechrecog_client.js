@@ -37,7 +37,7 @@ const local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
 const local_sip_port = config.local_sip_port ? config.local_sip_port : 5090
 const local_rtp_port = config.local_rtp_port ? config.local_rtp_port : 10000
 
-const dialogs = {}
+var call_id = utils.rstring()
 
 var buffer = new Buffer(160)
 
@@ -48,12 +48,16 @@ const sip_stack = sip.create({
 
 	(req) => {
 		if(req.method == 'BYE') {
-			var res = sip.makeResponse(req, 200, 'OK')
-			sip_stack.send(res)
-			console.log('Got BYE')
-			setTimeout(() => {
-				process.exit(0)
-			}, 1000)
+			if(req.headers['call-id'] == call_id) {
+				var res = sip.makeResponse(req, 200, 'OK')
+				sip_stack.send(res)
+				console.log('Got BYE')
+				setTimeout(() => {
+					process.exit(0)
+				}, 1000)
+			} else {
+				sip_stack.send(sip.makeResponse(req, 481, "Call Leg/Transaction Does Not Exist"))
+			}
 		}
 
 		sip_stack.send(sip.makeResponse(req, 405, "Method not allowed"))
@@ -79,7 +83,7 @@ sip_stack.send(
 		headers: {
 			to: {uri: sip_uri},
 			from: {uri: `sip:mrcp_client@${local_ip}:${local_sip_port}`, params: {tag: utils.rstring()}},
-			'call-id': utils.rstring(),
+			'call-id': call_id,
 			cseq: {method: 'INVITE', seq: Math.floor(Math.random() * 1e5)},
 			'content-type': 'application/sdp',
 			contact: [{uri: `sip:mrcp_client@${local_ip}:${local_sip_port}`}],
@@ -105,33 +109,11 @@ sip_stack.send(
 				headers: {
 					to: rs.headers.to,
 					from: rs.headers.from,
-					'call-id': rs.headers['call-id'],
+					'call-id': call_id,
 					cseq: {method: 'ACK', seq: rs.headers.cseq.seq},
 					via: []
 				}
 			})
-
-			var id = [rs.headers['call-id'], rs.headers.from.params.tag, rs.headers.to.params.tag].join(':')
-
-			// registering our 'dialog' which is just function to process in-dialog requests
-
-			try {
-				if(!dialogs[id]) {
-					dialogs[id] = function(rq) {
-						if(rq.method === 'BYE') {
-							console.log('Call received bye')
-
-							delete dialogs[id]
-
-							sip_stack.send(sip.makeResponse(rq, 200, 'Ok'))
-						} else {
-							sip_stack.send(sip.makeResponse(rq, 405, 'Method not allowed'))
-						}
-					}
-				}
-			} catch(e) {
-				console.error(e)
-			}
 
 			var data = {}
 
@@ -226,7 +208,7 @@ sip_stack.send(
 							headers: {
 								to: rs.headers.to,
 								from: rs.headers.from,
-								'call-id': rs.headers['call-id'],
+								'call-id': call_id,
 								cseq: {method: 'BYE', seq: rs.headers.cseq.seq + 1},
 								via: []
 							}
