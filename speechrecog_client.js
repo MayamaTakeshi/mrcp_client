@@ -195,6 +195,26 @@ sip_stack.send(
 								})
 							}, 20)
 						})
+
+						// Simulating client disconnection during recognition
+						/*
+						setTimeout(() => {
+							sip_stack.send({
+								method: 'BYE',
+								uri: rs.headers.contact[0].uri,
+								headers: {
+									to: rs.headers.to,
+									from: rs.headers.from,
+									'call-id': call_id,
+									cseq: {method: 'BYE', seq: rs.headers.cseq.seq + 1},
+									via: []
+								}
+							}, (res) => {
+									console.log(`BYE got: ${res.status} ${res.reason}`)	
+									process.exit(0)
+							})
+						}, 500)
+						*/
 					} else if (data.type == 'event' && data.event_name == 'RECOGNITION-COMPLETE') {
 						if(tid) {
 							clearInterval(tid)
