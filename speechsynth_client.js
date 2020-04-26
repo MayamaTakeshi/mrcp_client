@@ -24,6 +24,8 @@ const speaker = new Speaker({
 
 const lu = require('./linear_ulaw')
 
+const uuid = require('uuid')
+
 const usage = () => {
 	console.log(`
 Usage:    node ${args.$0} server_sip_host server_sip_port language voice text_or_file
@@ -64,7 +66,7 @@ const local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
 const local_sip_port = config.local_sip_port ? config.local_sip_port : 5090
 const local_rtp_port = config.local_rtp_port ? config.local_rtp_port : 10000
 
-var call_id = utils.rstring()
+var call_id = uuid.v4()
 
 const sip_stack = sip.create({
 		address: local_ip,

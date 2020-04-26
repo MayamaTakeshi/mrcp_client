@@ -11,6 +11,8 @@ const mrcp = require('mrcp')
 
 const fs = require('fs')
 
+const uuid = require('uuid')
+
 const usage = () => {
 	console.log(`
 Usage: node ${args.$0} server_sip_host server_sip_port language audio_file
@@ -37,7 +39,7 @@ const local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
 const local_sip_port = config.local_sip_port ? config.local_sip_port : 5090
 const local_rtp_port = config.local_rtp_port ? config.local_rtp_port : 10000
 
-var call_id = utils.rstring()
+var call_id = uuid.v4()
 
 var buffer = new Buffer(160)
 
