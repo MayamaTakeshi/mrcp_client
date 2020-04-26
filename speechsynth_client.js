@@ -72,8 +72,16 @@ const sip_stack = sip.create({
 	},
 
 	(req) => {
-		// We don't accept incoming calls
-		sip_stack.send(sip.makeResponse(rq, 405, "Method not allowed"))
+		if(req.method == 'BYE') {
+			var res = sip.makeResponse(req, 200, 'OK')
+			sip_stack.send(res)
+			console.log('Got BYE')
+			setTimeout(() => {
+				process.exit(0)
+			}, 1000)
+		}
+
+		sip_stack.send(sip.makeResponse(req, 405, "Method not allowed"))
 	}
 )
 
@@ -115,8 +123,6 @@ sip_stack.send(
 			// yes we can get multiple 2xx response with different tags
 			console.log('call answered with tag ' + rs.headers.to.params.tag)
 
-			console.log("P1")
-
 			// sending ACK
 			sip_stack.send({
 				method: 'ACK',
@@ -130,10 +136,8 @@ sip_stack.send(
 				}
 			})
 
-			console.log("P2")
 			var id = [rs.headers['call-id'], rs.headers.from.params.tag, rs.headers.to.params.tag].join(':')
 
-			console.log("P3")
 			// registering our 'dialog' which is just function to process in-dialog requests
 
 			try {
@@ -154,7 +158,6 @@ sip_stack.send(
 				console.error(e)
 			}
 
-			console.log("P4")
 			var data = {}
 
 			try {
@@ -190,7 +193,7 @@ sip_stack.send(
 				var request_id = 1
 
 				var msg = utils.build_mrcp_request('SPEAK', request_id, data.channel, args)
-				console.log('Sending MRCP requests. result: ', client.write(msg))
+				//console.log('Sending MRCP requests. result: ', client.write(msg))
 				request_id++
 
 				client.on('error', (err) => {

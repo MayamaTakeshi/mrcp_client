@@ -47,8 +47,16 @@ const sip_stack = sip.create({
 	},
 
 	(req) => {
-		// We don't accept incoming calls
-		sip_stack.send(sip.makeResponse(rq, 405, "Method not allowed"))
+		if(req.method == 'BYE') {
+			var res = sip.makeResponse(req, 200, 'OK')
+			sip_stack.send(res)
+			console.log('Got BYE')
+			setTimeout(() => {
+				process.exit(0)
+			}, 1000)
+		}
+
+		sip_stack.send(sip.makeResponse(req, 405, "Method not allowed"))
 	}
 )
 
