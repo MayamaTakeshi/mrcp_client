@@ -114,9 +114,14 @@ const build_mrcp_request = (message, request_id, channel_identifier, args) => {
 		headers['speech-language'] = args.language
 		headers['voice-name'] = args.voice
 		msg = mrcp.builder.build_request(message, request_id, headers, args.text)
+	} else if(message == 'DEFINE-GRAMMAR') {
+		headers['content-id'] = args.content_id
+		headers['content-type'] = 'application/xml'
+		msg = mrcp.builder.build_request(message, request_id, headers, args.grammar)
 	} else if(message == 'RECOGNIZE') {
+		headers['content-type'] = 'text/uri-list'
 		headers['speech-language'] = args.language
-		msg = mrcp.builder.build_request(message, request_id, headers, null)
+		msg = mrcp.builder.build_request(message, request_id, headers, "session:" + args.content_id)
 	} else if(message == 'STOP') {
 		msg = mrcp.builder.build_request(message, request_id, headers, null)
 	} else {

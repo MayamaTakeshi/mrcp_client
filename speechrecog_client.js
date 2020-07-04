@@ -15,14 +15,14 @@ const uuid = require('uuid')
 
 const usage = () => {
 	console.log(`
-Usage: node ${args.$0} server_sip_host server_sip_port language audio_file
-Ex:    node ${args.$0} 192.168.1.1 8060 ja-JP artifacts/ohayou_gozaimasu.wav 
+Usage: node ${args.$0} server_sip_host server_sip_port language audio_file grammar_file
+Ex:    node ${args.$0} 192.168.1.1 8060 ja-JP artifacts/ohayou_gozaimasu.wav artifacts/grammar.xml
 
 `)
 }
 
 
-if(args._.length != 4) {
+if(args._.length != 5) {
 	console.error("Invalid number of arguments")
 	usage()
 	process.exit(1)
@@ -30,8 +30,9 @@ if(args._.length != 4) {
 
 const server_sip_host = args._[0]
 const server_sip_port = args._[1]
-args['language'] = args._[2]
+const language = args._[2]
 const audio_file = args._[3]
+const grammar_file = args._[4]
 
 const resource_type = 'speechrecog'
 
@@ -39,7 +40,13 @@ const local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
 const local_sip_port = config.local_sip_port ? config.local_sip_port : 5090
 const local_rtp_port = config.local_rtp_port ? config.local_rtp_port : 10000
 
+const grammar = fs.readFileSync(grammar_file, {encoding:'utf8', flag:'r'})
+
 var call_id = uuid.v4()
+
+var content_id = uuid.v4()
+
+args.content_id = content_id
 
 var buffer = new Buffer(160)
 
@@ -136,14 +143,22 @@ sip_stack.send(
 
 				var request_id = 1
 
-				var msg = utils.build_mrcp_request('RECOGNIZE', request_id, data.channel, args)
-				console.log('Sending MRCP request. result: ', client.write(msg))
-				request_id++
-
 				client.on('error', (err) => {
 					console.error(err)
 					process.exit(1)
 				})
+
+				var define_grammar_request_id
+				var recognize_request_id
+
+				var define_grammar_msg = utils.build_mrcp_request('DEFINE-GRAMMAR', request_id, data.channel, {
+					'content_id': content_id,
+					'grammar': grammar,
+				})
+
+				console.log('Sending MRCP DEFINE-GRAMMAR request. result: ', client.write(define_grammar_msg))
+				define_grammar_request_id = request_id
+				request_id++
 
 				var tid
 
@@ -155,7 +170,16 @@ sip_stack.send(
 					console.log(d)
 					console.log()
 
-					if(d.type == 'response' && d.status_code == 200) { 
+			
+					if(d.type == 'response' && d.request_id == define_grammar_request_id && d.status_code == 200) { 
+						var recognize_msg = utils.build_mrcp_request('RECOGNIZE', request_id, data.channel, {
+							'language': language,
+							'content_id': content_id,
+						})
+						console.log('Sending MRCP RECOGNIZE request. result: ', client.write(recognize_msg))
+						recognize_request_id = request_id
+						request_id++
+					} else if(d.type == 'response' && d.request_id == recognize_request_id && d.status_code == 200) { 
 						const { spawn } = require('child_process');
 						const ls = spawn('sox', [audio_file, "-r", "8000", "-t", "raw", "-e", "mu-law", "temp.raw"]);
 
