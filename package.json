@@ -1,6 +1,6 @@
 {
   "name": "mrcp_client",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "index.js",
   "repository": {
@@ -28,6 +28,6 @@
     "speaker": "^0.5.1",
     "uuid": "^7.0.3",
     "wav": "^1.0.2",
-    "yargs": "^15.1.0"
+    "yargs": "^15.4.1"
   }
 }
