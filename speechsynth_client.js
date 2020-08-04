@@ -49,7 +49,9 @@ const server_sip_host = args._[0]
 const server_sip_port = args._[1]
 const language = args._[2]
 const voice = args._[3]
-var text = args._[4]
+var text = args._[4].toString() // it seems args converts numeric strings to numbers. So we need to force text to stay as string.
+
+console.log(text)
 
 if(text.startsWith("@")) {
 	const file_name = text.substr(1)
