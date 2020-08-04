@@ -12,6 +12,8 @@ const mrcp = require('mrcp')
 
 const Speaker = require('speaker')
 
+const FileWriter = require('wav').FileWriter
+
 const speaker = new Speaker({
 	audioFormat: 1,
 	endianness: 'LE',
@@ -28,13 +30,14 @@ const uuid = require('uuid')
 
 const usage = () => {
 	console.log(`
-Usage:    node ${args.$0} server_sip_host server_sip_port language voice text_or_file
+Usage:    node ${args.$0} [-w output_file] server_sip_host server_sip_port language voice text_or_file
 
 Examples: node ${args.$0} 192.168.1.1 8060 ja-JP ja-JP-Wavenet-A "おはようございます."
           node ${args.$0} 192.168.1.1 8060 ja-JP ja-JP-Wavenet-A @some_file.txt
 
 Details:
-          text: the text to be converted to speech. If it starts with @, it will indicate a file containing the text to be converted.
+          -w output_file: indicates if received speech should be written to a wav file 
+          text_or_file: the text to be converted to speech. If it starts with @, it will indicate a file containing the text to be converted.
 `)
 }
 
@@ -101,6 +104,15 @@ rtp_session.set_local_end_point(local_ip, local_rtp_port)
 
 const sip_uri = `sip:${server_sip_host}:${server_sip_port}`
 
+var output_file = null
+if(args.w) {
+	output_file = new FileWriter(args.w, {
+		sampleRate: 8000,
+		channels: 1,
+		signed: true,
+	})
+}
+
 sip_stack.send(
 	{
 		method: 'INVITE',
@@ -165,6 +177,10 @@ sip_stack.send(
 					}
 
 					speaker.write(buf)
+
+					if(output_file) {
+						output_file.write(buf)
+					}
 				})
 
 				var client = mrcp.createClient({
@@ -228,7 +244,17 @@ sip_stack.send(
 								}
 							}, (res) => {
 									console.log(`BYE got: ${res.status} ${res.reason}`)	
-									process.exit(0)
+									if(output_file) {
+										setTimeout(() => {
+											output_file.end(res => {
+												process.exit(0)
+											})
+										}, 1000)
+									} else {
+										setTimeout(() => {
+											process.exit(0)
+										}, 1000)
+									}
 							})
 						}, 500)
 					} else {
