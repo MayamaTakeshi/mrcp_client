@@ -18,7 +18,7 @@ Then create config file:
   vim config/default.js # ajdust parameters as necessary (minimally, set the local_ip)
 ```
 
-Then you can use either:
+Then you can test by using either:
 ```
   node speechsynth_client.js
 ```
@@ -27,5 +27,28 @@ or
   node speechrecog_client.js
 ```
 
-to send requests to an MRCPv2 server (you can try it with https://github.com/MayamaTakeshi/mrcp_server)
+You can try them with https://github.com/MayamaTakeshi/mrcp_server
+
+Once it is installed you can test Google Speech Synthesis like this:
+```
+  node speechsynth_client.js 127.0.0.1 8070 en-US en-US-Wavenet-E "Hello World."
+
+  node speechsynth_client.js 127.0.0.1 8070 ja-JP ja-JP-Wavenet-A "おはようございます."
+```
+or like this to save audio to a wav file:
+```
+  node speechsynth_client.js -w generated_speech.wav 127.0.0.1 8070 en-US en-US-Wavenet-E "Hello World."
+```
+
+To test Google Speech Recognition:
+```
+  node speechrecog_client.js 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav artifacts/grammar.xml
+```
+
+If you use mrcp_server and don't have Google credentials, you can test using DTMF:
+```
+  node speechsynth_client.js 127.0.0.1 8070 dtmf dtmf 1234567890abcd*#
+
+  node speechrecog_client.js 127.0.0.1 8070 dtmf artifacts/dtmf.0123456789ABCDEF.16000hz.wav artifacts/grammar.xml
+```
 
