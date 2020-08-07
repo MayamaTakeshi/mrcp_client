@@ -13,10 +13,12 @@ const fs = require('fs')
 
 const uuid = require('uuid')
 
+const Mic = require('node-microphone')
+
 const usage = () => {
 	console.log(`
 Usage: node ${args.$0} server_sip_host server_sip_port language audio_file grammar_file
-Ex:    node ${args.$0} 192.168.1.1 8060 ja-JP artifacts/ohayou_gozaimasu.wav artifacts/grammar.xml
+Ex:    node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav artifacts/grammar.xml
 
 `)
 }
@@ -49,6 +51,9 @@ var content_id = uuid.v4()
 args.content_id = content_id
 
 var buffer = new Buffer(160)
+
+//var mic = new Mic()
+var mic = null
 
 const sip_stack = sip.create({
 		address: local_ip,
@@ -180,56 +185,69 @@ sip_stack.send(
 						recognize_request_id = request_id
 						request_id++
 					} else if(d.type == 'response' && d.request_id == recognize_request_id && d.status_code == 200) { 
-						const { spawn } = require('child_process');
-						const ls = spawn('sox', [audio_file, "-r", "8000", "-t", "raw", "-e", "mu-law", "temp.raw"]);
-
-
-						// DEBUG CODE
-						/*
-						setTimeout(() => {
-							var msg = utils.build_mrcp_request('STOP', request_id+1, data.channel, args)
-							console.log('Sending MRCP request. result: ', client.write(msg))
-						}, 100)
-						*/
-
-						ls.stdout.on('data', (data) => {
-						  console.log(`stdout: ${data}`);
-						});
-
-						ls.stderr.on('data', (data) => {
-						  console.error(`stderr: ${data}`);
-						});
-
-						ls.on('close', (code) => {
-							console.log(`child process exited with code ${code}`);
-
-							const fd = fs.openSync("temp.raw", "r")
+						if(mic) {
+							let micStream = mic.startRecording()
 
 							tid = setInterval(() => {
-								fs.read(fd, buffer, 0, 160, null, (err, bytesRead, data) => {
-									if(err) {
-										console.error(err)
-										clearInterval(tid)
-										tid = null
-									} else if(bytesRead == 0) {
-										console.log("No more data")
-										clearInterval(tid)
-										for(i=0 ;i<160; i++) {
-											buffer[i] = 0x7F
-										}
-
-										tid = setInterval(() => {
-											//console.log("sending silence")	
-											rtp_session.send_payload(buffer, 0, 0) 	
-										}, 20)
-									} else {
-										console.log(`Fetched ${bytesRead} bytes from audio_file. Sending to MRCP server.`)
-										//console.log(data)
-										rtp_session.send_payload(buffer, 0, 0) 	
-									}
-								})
+								var buffer = micStream.read(160)
+								console.log(buffer)
+								if(buffer) {
+									rtp_session.send_payload(buffer, 0, 0) 	
+								}
 							}, 20)
-						})
+					
+						} else {
+							const { spawn } = require('child_process');
+							const ls = spawn('sox', [audio_file, "-r", "8000", "-t", "raw", "-e", "mu-law", "temp.raw"]);
+
+
+							// DEBUG CODE
+							/*
+							setTimeout(() => {
+								var msg = utils.build_mrcp_request('STOP', request_id+1, data.channel, args)
+								console.log('Sending MRCP request. result: ', client.write(msg))
+							}, 100)
+							*/
+
+							ls.stdout.on('data', (data) => {
+							  console.log(`stdout: ${data}`);
+							});
+
+							ls.stderr.on('data', (data) => {
+							  console.error(`stderr: ${data}`);
+							});
+
+							ls.on('close', (code) => {
+								console.log(`child process exited with code ${code}`);
+
+								const fd = fs.openSync("temp.raw", "r")
+
+								tid = setInterval(() => {
+									fs.read(fd, buffer, 0, 160, null, (err, bytesRead, data) => {
+										if(err) {
+											console.error(err)
+											clearInterval(tid)
+											tid = null
+										} else if(bytesRead == 0) {
+											console.log("No more data")
+											clearInterval(tid)
+											for(i=0 ;i<160; i++) {
+												buffer[i] = 0x7F
+											}
+
+											tid = setInterval(() => {
+												//console.log("sending silence")	
+												rtp_session.send_payload(buffer, 0, 0) 	
+											}, 20)
+										} else {
+											console.log(`Fetched ${bytesRead} bytes from audio_file. Sending to MRCP server.`)
+											//console.log(data)
+											rtp_session.send_payload(buffer, 0, 0) 	
+										}
+									})
+								}, 20)
+							})
+						}
 
 						// Simulating client disconnection during recognition
 						/*

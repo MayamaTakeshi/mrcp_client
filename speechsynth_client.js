@@ -32,8 +32,8 @@ const usage = () => {
 	console.log(`
 Usage:    node ${args.$0} [-w output_file] server_sip_host server_sip_port language voice text_or_file
 
-Examples: node ${args.$0} 192.168.1.1 8060 ja-JP ja-JP-Wavenet-A "おはようございます."
-          node ${args.$0} 192.168.1.1 8060 ja-JP ja-JP-Wavenet-A @some_file.txt
+Examples: node ${args.$0} 127.0.0.1 8070 ja-JP ja-JP-Wavenet-A "おはようございます."
+          node ${args.$0} 127.0.0.1 8070 ja-JP ja-JP-Wavenet-A @some_file.txt
 
 Details:
           -w output_file: indicates if received speech should be written to a wav file 
