@@ -2,7 +2,11 @@
 
 This is an experimental Media Resource Control Protocol (MRCPv2) client that I'm writing in node.js for learning purposes.
 
-Install dependencies. Do:
+The version of node used for development can found in the package.json file.
+
+## Installation
+
+First install non-npm dependencies. Do:
 
 ```
   apt install sox libasound2-dev
@@ -12,7 +16,7 @@ or
   yum install sox libasound2-devel
 ```
 
-and then
+and then istall npm dependencies
 ```
   npm install
 ```
@@ -23,7 +27,9 @@ Then create config file:
   vim config/default.js # ajdust parameters as necessary (minimally, set the local_ip)
 ```
 
-Then you can test by using either:
+## Testing
+
+You can test by using either:
 ```
   node speechsynth_client.js
 ```
