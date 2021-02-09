@@ -2,14 +2,19 @@
 
 This is an experimental Media Resource Control Protocol (MRCPv2) client that I'm writing in node.js for learning purposes.
 
-You must have sox installed. Do:
+Install dependencies. Do:
 
 ```
-  apt install sox
+  apt install sox libasound2-dev
 ```
 or
 ```
-  yum install sox
+  yum install sox libasound2-devel
+```
+
+and then
+```
+  npm install
 ```
 
 Then create config file:
