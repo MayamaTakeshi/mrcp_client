@@ -195,7 +195,7 @@ const build_mrcp_request = (message, request_id, channel_identifier, args) => {
 
 	var msg
 	if(message == 'SPEAK') {
-		headers['content-type'] = 'text/plain'
+		headers['content-type'] = args.text.indexOf('<speak>') >= 0 ? 'application/ssml+xml' : 'text/plain'
 		headers['speech-language'] = args.language
 		headers['voice-name'] = args.voice
 		msg = mrcp.builder.build_request(message, request_id, headers, args.text)

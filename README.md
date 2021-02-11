@@ -50,6 +50,10 @@ or like this to save audio to a wav file:
 ```
 node speechsynth_client.js -w generated_speech.wav 127.0.0.1 8070 en-US en-US-Wavenet-E "Hello World."
 ```
+or like this to use SSML:
+```
+node speechsynth_client.js 127.0.0.1 8070 en-US en-US-Standard-C "<speak><prosody rate='x-slow' pitch='3st'>I'm sad today.</prosody></speak>"
+```
 
 To test Google Speech Recognition:
 ```
