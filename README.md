@@ -70,7 +70,7 @@ While this tool was not developed with load testing in mind, if you need to make
 NUMBER_OF_CALLS=10; for i in $(seq 1 $NUMBER_OF_CALLS);do node speechsynth_client.js 127.0.0.1 8070 dtmf dtmf 1234 & sleep 0.1; done
 
 or this for speechrecog:
-````
+```
 NUMBER_OF_CALLS=10; for i in $(seq 1 $NUMBER_OF_CALLS);do node speechrecog_client.js 127.0.0.1 8070 dtmf artifacts/dtmf.0123456789ABCDEF.16000hz.wav artifacts/grammar.xml & sleep 0.1; done
 
 ```
