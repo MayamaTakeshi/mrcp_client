@@ -2,7 +2,7 @@
 
 This is an experimental Media Resource Control Protocol (MRCPv2) client that I'm writing in node.js for learning purposes.
 
-The version of node used for development can found in the package.json file.
+The version of node used for development can be found in the package.json file.
 
 ## Installation
 
@@ -16,7 +16,7 @@ or
 yum install sox libasound2-devel
 ```
 
-and then istall npm dependencies
+and then install npm dependencies
 ```
 npm install
 ```
