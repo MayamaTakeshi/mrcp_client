@@ -68,12 +68,12 @@ node speechrecog_client.js 127.0.0.1 8070 dtmf artifacts/dtmf.0123456789ABCDEF.1
 While this tool was not developed with load testing in mind, if you need to make several calls to your MRCP server you can do it with something like this for speechsynth:
 ```
 NUMBER_OF_CALLS=10; for i in $(seq 1 $NUMBER_OF_CALLS);do node speechsynth_client.js 127.0.0.1 8070 dtmf dtmf 1234 & sleep 0.1; done
-
+```
 or this for speechrecog:
 ```
 NUMBER_OF_CALLS=10; for i in $(seq 1 $NUMBER_OF_CALLS);do node speechrecog_client.js 127.0.0.1 8070 dtmf artifacts/dtmf.0123456789ABCDEF.16000hz.wav artifacts/grammar.xml & sleep 0.1; done
-
 ```
+
   Obs: the "sleep 0.1" is necessary to minimize the risk of failing to allocate the UDP port for the SIP stack due to a shortcoming in the sip.js library we are using. Ref: https://github.com/kirm/sip.js/issues/147
 
 And to keep generating calls in a loop you can use something like this for speechsynth:
