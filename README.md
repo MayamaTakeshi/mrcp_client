@@ -63,3 +63,19 @@ If you use mrcp_server and don't have Google credentials, you can test using DTM
   node speechrecog_client.js 127.0.0.1 8070 dtmf artifacts/dtmf.0123456789ABCDEF.16000hz.wav artifacts/grammar.xml
 ```
 
+## Load testing
+
+While this tool was not developed with load testing in mind, if you need to make several calls to your MRCP server you can do it with something like this:
+```
+NUMBER_OF_CALLS=10; for i in $(seq 1 $NUMBER_OF_CALLS);do node speechsynth_client.js 127.0.0.1 8070 dtmf dtmf 1234 & sleep 0.1; done
+```
+  Obs: the "sleep 0.1" is necessary to minimize the risk of failing to allocate the UDP port for the SIP stack. Ref: https://github.com/kirm/sip.js/issues/147
+
+And to keep generating calls in a loop you can use something lilke this:
+```
+  NUMBER_OF_CALLS=10; while [[ 1 ]];do for i in $(seq 1 $NUMBER_OF_CALLS);do node speechsynth_client.js 127.0.0.1 8070 dtmf dtmf 1234 & sleep 0.1; done; sleep 2; done
+```
+
+Obs: be careful when load testing an MRCP server that uses paid speech services like Google Speech, Amazon Polly etc as you might get a large bill if you forget the load test running for very long.
+
+

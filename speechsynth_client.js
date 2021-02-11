@@ -1,18 +1,19 @@
 const sip = require('sip')
 const config = require('config')
 const fs = require('fs')
-
-const utils = require('./utils')
-
-const args = require('yargs').argv
-
-const RtpSession = require('rtp-session')
-
+const _ = require('lodash')
+const deasyncPromise = require('deasync-promise')
 const mrcp = require('mrcp')
 
 const Speaker = require('speaker')
-
 const FileWriter = require('wav').FileWriter
+
+const utils = require('./utils')
+const lu = require('./linear_ulaw')
+
+const args = require('yargs').argv
+
+const uuid = require('uuid')
 
 const speaker = new Speaker({
 	audioFormat: 1,
@@ -24,9 +25,7 @@ const speaker = new Speaker({
 	signed: true,
 })
 
-const lu = require('./linear_ulaw')
 
-const uuid = require('uuid')
 
 const usage = () => {
 	console.log(`
@@ -54,7 +53,9 @@ const language = args._[2]
 const voice = args._[3]
 var text = args._[4].toString() // it seems args converts numeric strings to numbers. So we need to force text to stay as string.
 
-console.log(text)
+console.log(`language: ${language}`)
+console.log(`voice: ${voice}`)
+console.log(`text: ${text}`)
 
 if(text.startsWith("@")) {
 	const file_name = text.substr(1)
@@ -67,9 +68,34 @@ args['language'] = language
 args['voice'] = voice
 args['text'] = text
 
-const local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
-const local_sip_port = config.local_sip_port ? config.local_sip_port : 5090
-const local_rtp_port = config.local_rtp_port ? config.local_rtp_port : 10000
+var local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
+var local_sip_port = config.local_sip_port
+var local_rtp_port = config.local_rtp_port
+
+const rtp_session = utils.alloc_rtp_session(local_rtp_port, local_ip)
+if(!rtp_session) {
+    console.error("Failed to allocate rtp_session")
+    process.exit(1)
+}
+
+local_rtp_port = rtp_session._info.local_port
+
+rtp_session.on('error', (err) => {
+    console.error(err)
+    process.exit(1)
+})
+
+var free_sip_port = utils.find_free_sip_port(local_sip_port, local_ip)
+if(!free_sip_port) {
+    if(local_sip_port) {
+        console.error(`config.local_sip_port=${local_sip_port} is already being used by another application`)
+    } else {
+        console.error(`Failed to find free UDP port for SIP stack`)
+    }
+    process.exit(1)
+}
+
+local_sip_port = free_sip_port
 
 var call_id = uuid.v4()
 
@@ -91,16 +117,6 @@ const sip_stack = sip.create({
 		sip_stack.send(sip.makeResponse(req, 405, "Method not allowed"))
 	}
 )
-
-
-const rtp_session = new RtpSession({})
-rtp_session.on('error', (err) => {
-	console.error(err)
-	process.exit(1)
-})
-
-
-rtp_session.set_local_end_point(local_ip, local_rtp_port)
 
 const sip_uri = `sip:${server_sip_host}:${server_sip_port}`
 
