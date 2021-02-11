@@ -64,6 +64,8 @@ if(text.startsWith("@")) {
 
 const resource_type = 'speechsynth'
 
+const call_id = uuid.v4()
+
 args['language'] = language
 args['voice'] = voice
 args['text'] = text
@@ -71,6 +73,7 @@ args['text'] = text
 var local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
 var local_sip_port = config.local_sip_port
 var local_rtp_port = config.local_rtp_port
+
 
 const rtp_session = utils.alloc_rtp_session(local_rtp_port, local_ip)
 if(!rtp_session) {
@@ -97,7 +100,6 @@ if(!free_sip_port) {
 
 local_sip_port = free_sip_port
 
-var call_id = uuid.v4()
 
 const sip_stack = sip.create({
 		address: local_ip,

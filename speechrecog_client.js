@@ -1,19 +1,17 @@
 const sip = require('sip')
 const config = require('config')
+const fs = require('fs')
+const _ = require('lodash')
+const deasyncPromise = require('deasync-promise')
+const mrcp = require('mrcp')
+
+const Mic = require('node-microphone')
 
 const utils = require('./utils')
 
 const args = require('yargs').argv
 
-const RtpSession = require('rtp-session')
-
-const mrcp = require('mrcp')
-
-const fs = require('fs')
-
 const uuid = require('uuid')
-
-const Mic = require('node-microphone')
 
 const usage = () => {
 	console.log(`
@@ -38,22 +36,49 @@ const grammar_file = args._[4]
 
 const resource_type = 'speechrecog'
 
-const local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
-const local_sip_port = config.local_sip_port ? config.local_sip_port : 5090
-const local_rtp_port = config.local_rtp_port ? config.local_rtp_port : 10000
+const call_id = uuid.v4()
 
-const grammar = fs.readFileSync(grammar_file, {encoding:'utf8', flag:'r'})
-
-var call_id = uuid.v4()
-
-var content_id = uuid.v4()
+const content_id = uuid.v4()
 
 args.content_id = content_id
 
-var buffer = new Buffer(160)
+const buffer = new Buffer(160)
+
+const grammar = fs.readFileSync(grammar_file, {encoding:'utf8', flag:'r'})
 
 //var mic = new Mic()
 var mic = null
+
+var local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
+var local_sip_port = config.local_sip_port
+var local_rtp_port = config.local_rtp_port
+
+
+const rtp_session = utils.alloc_rtp_session(local_rtp_port, local_ip)
+if(!rtp_session) {
+    console.error("Failed to allocate rtp_session")
+    process.exit(1)
+}
+
+local_rtp_port = rtp_session._info.local_port
+
+rtp_session.on('error', (err) => {
+    console.error(err)
+    process.exit(1)
+})
+
+var free_sip_port = utils.find_free_sip_port(local_sip_port, local_ip)
+if(!free_sip_port) {
+    if(local_sip_port) {
+        console.error(`config.local_sip_port=${local_sip_port} is already being used by another application`)
+    } else {
+        console.error(`Failed to find free UDP port for SIP stack`)
+    }
+    process.exit(1)
+}
+
+local_sip_port = free_sip_port
+
 
 const sip_stack = sip.create({
 		address: local_ip,
@@ -77,16 +102,6 @@ const sip_stack = sip.create({
 		sip_stack.send(sip.makeResponse(req, 405, "Method not allowed"))
 	}
 )
-
-
-const rtp_session = new RtpSession({})
-rtp_session.on('error', (err) => {
-	console.error(err)
-	process.exit(1)
-})
-
-
-rtp_session.set_local_end_point(local_ip, local_rtp_port)
 
 const sip_uri = `sip:${server_sip_host}:${server_sip_port}`
 
