@@ -29,13 +29,14 @@ const speaker = new Speaker({
 
 const usage = () => {
 	console.log(`
-Usage:    node ${args.$0} [-w output_file] server_sip_host server_sip_port language voice text_or_file
+Usage:    node ${args.$0} [-w output_file] [-t timeout] server_sip_host server_sip_port language voice text_or_file
 
 Examples: node ${args.$0} 127.0.0.1 8070 ja-JP ja-JP-Wavenet-A "おはようございます."
           node ${args.$0} 127.0.0.1 8070 ja-JP ja-JP-Wavenet-A @some_file.txt
 
 Details:
           -w output_file: indicates if received speech should be written to a wav file 
+          -t timeout: timeout in milliseconds to wait for operation to complete 
           text_or_file: the text to be converted to speech. If it starts with @, it will indicate a file containing the text to be converted.
 `)
 }
@@ -129,6 +130,14 @@ if(args.w) {
 		channels: 1,
 		signed: true,
 	})
+}
+
+if(args.t) {
+    var timeout = parseInt(args.t)
+    setTimeout(() => {
+        console.log("timeout. Terminating")
+        process.exit(1)
+    }, timeout)
 }
 
 sip_stack.send(

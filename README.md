@@ -82,11 +82,11 @@ NUMBER_OF_CALLS=10; for i in $(seq 1 $NUMBER_OF_CALLS);do node speechrecog_clien
 
 And to keep generating calls in a loop you can use something like this for speechsynth:
 ```
-NUMBER_OF_CALLS=10; while [[ 1 ]];do for i in $(seq 1 $NUMBER_OF_CALLS);do node speechsynth_client.js 127.0.0.1 8070 dtmf dtmf 1234 & sleep 0.1; done; sleep 2; done
+NUMBER_OF_CALLS=10; while [[ 1 ]];do for i in $(seq 1 $NUMBER_OF_CALLS);do node speechsynth_client.js -t 5000 127.0.0.1 8070 dtmf dtmf 1234 & sleep 0.1; done; sleep 2; done
 ```
 or this for speechrecog:
 ```
-NUMBER_OF_CALLS=10; while [[ 1 ]];do for i in $(seq 1 $NUMBER_OF_CALLS);do node speechrecog_client.js 127.0.0.1 8070 dtmf artifacts/dtmf.0123456789ABCDEF.16000hz.wav artifacts/grammar_empty.xml & sleep 0.1; done; sleep 4; done
+NUMBER_OF_CALLS=10; while [[ 1 ]];do for i in $(seq 1 $NUMBER_OF_CALLS);do node speechrecog_client.js -t 5000 127.0.0.1 8070 dtmf artifacts/dtmf.0123456789ABCDEF.16000hz.wav artifacts/grammar_empty.xml & sleep 0.1; done; sleep 4; done
 ```
 
 Obs: be careful when load testing an MRCP server that uses paid speech services like Google Speech, Amazon Polly etc as you might get a large bill if you forget the load test running for very long.
