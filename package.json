@@ -1,6 +1,6 @@
 {
   "name": "mrcp_client",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "",
   "main": "index.js",
   "repository": {
@@ -28,6 +28,7 @@
     "deasync-promise": "^1.0.1",
     "lodash": "^4.17.20",
     "mrcp": "^1.3.4",
+    "mrcp-utils": "^1.0.0",
     "node-microphone": "^0.1.5",
     "rtp-session": "^1.2.2",
     "sip": "0.0.6",

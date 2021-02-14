@@ -4,6 +4,7 @@ const fs = require('fs')
 const _ = require('lodash')
 const deasyncPromise = require('deasync-promise')
 const mrcp = require('mrcp')
+const mrcp_utils = require('mrcp-utils')
 
 const Mic = require('node-microphone')
 
@@ -126,7 +127,7 @@ sip_stack.send(
 			'content-type': 'application/sdp',
 			contact: [{uri: `sip:mrcp_client@${local_ip}:${local_sip_port}`}],
 		},
-		content: utils.gen_sdp(resource_type, local_ip, local_rtp_port),
+		content: mrcp_utils.gen_offer_sdp(resource_type, local_ip, local_rtp_port),
 	},
 	function(rs) {
 		console.log(rs)
@@ -156,9 +157,9 @@ sip_stack.send(
 			var data = {}
 
 			try {
-				var answer_sdp = utils.parse_sdp(rs.content)
+				var answer_sdp = mrcp_utils.parse_sdp(rs.content)
 				console.log(answer_sdp)
-				if(!utils.sdp_matcher(answer_sdp, data)) {
+				if(!mrcp_utils.answer_sdp_matcher(answer_sdp, data)) {
 					console.error("Could not get correct SDP answer")
 					process.exit(1)
 				}
