@@ -109,16 +109,16 @@ const sip_stack = sip.create({
     },
 
     (req) => {
-        if(req.method == 'BYE') {
-            if(req['call-id'] != call_id) {
-                console.log('Received non-dialog BYE')
-		        sip_stack.send(sip.makeResponse(req, 481, "Call Leg/Transaction Does Not Exist"))
-                return
-            }
+        if(req['call-id'] != call_id) {
+            console.log(`Received non-dialog ${req.method}`)
+            sip_stack.send(sip.makeResponse(req, 481, "Call Leg/Transaction Does Not Exist"))
+            return
+        }
 
+        if(req.method == 'BYE') {
+            console.log('Got BYE')
             var res = sip.makeResponse(req, 200, 'OK')
             sip_stack.send(res)
-            console.log('Got BYE')
             setTimeout(() => {
                 process.exit(0)
             }, 1000)
