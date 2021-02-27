@@ -254,14 +254,14 @@ sip_stack.send(
 											clearInterval(tid)
 											tid = null
 										} else if(bytesRead == 0) {
-											console.log("No more data")
+											console.log("No more data from file. Sending silence from now on")
 											clearInterval(tid)
+
 											for(i=0 ;i<160; i++) {
 												buffer[i] = 0x7F
 											}
 
 											tid = setInterval(() => {
-												//console.log("sending silence")	
 												rtp_session.send_payload(buffer, 0, 0) 	
 											}, 20)
 										} else {
