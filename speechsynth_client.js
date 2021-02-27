@@ -17,19 +17,19 @@ const args = require('yargs').argv
 const uuid = require('uuid')
 
 const speaker = new Speaker({
-	audioFormat: 1,
-	endianness: 'LE',
-	channels: 1,
-	sampleRate: 8000,
-	blockAlign: 2,
-	bitDepth: 16,
-	signed: true,
+    audioFormat: 1,
+    endianness: 'LE',
+    channels: 1,
+    sampleRate: 8000,
+    blockAlign: 2,
+    bitDepth: 16,
+    signed: true,
 })
 
 
 
 const usage = () => {
-	console.log(`
+    console.log(`
 Usage:    node ${args.$0} [-w output_file] [-t timeout] server_sip_host server_sip_port language voice text_or_file
 
 Examples: node ${args.$0} 127.0.0.1 8070 ja-JP ja-JP-Wavenet-A "おはようございます."
@@ -44,9 +44,9 @@ Details:
 
 
 if(args._.length != 5) {
-	console.error("Invalid number of arguments")
-	usage()
-	process.exit(1)
+    console.error("Invalid number of arguments")
+    usage()
+    process.exit(1)
 }
 
 const server_sip_host = args._[0]
@@ -60,8 +60,8 @@ console.log(`voice: ${voice}`)
 console.log(`text: ${text}`)
 
 if(text.startsWith("@")) {
-	const file_name = text.substr(1)
-	text = fs.readFileSync(file_name, "utf-8")
+    const file_name = text.substr(1)
+    text = fs.readFileSync(file_name, "utf-8")
 }
 
 const resource_type = 'speechsynth'
@@ -104,33 +104,41 @@ local_sip_port = free_sip_port
 
 
 const sip_stack = sip.create({
-		address: local_ip,
-		port: local_sip_port,
-	},
+        address: local_ip,
+        port: local_sip_port,
+    },
 
-	(req) => {
-		if(req.method == 'BYE') {
-			var res = sip.makeResponse(req, 200, 'OK')
-			sip_stack.send(res)
-			console.log('Got BYE')
-			setTimeout(() => {
-				process.exit(0)
-			}, 1000)
-		}
+    (req) => {
+        if(req.method == 'BYE') {
+            if(req['call-id'] != call_id) {
+                console.log('Received non-dialog BYE')
+		        sip_stack.send(sip.makeResponse(req, 481, "Call Leg/Transaction Does Not Exist"))
+                return
+            }
 
-		sip_stack.send(sip.makeResponse(req, 405, "Method not allowed"))
-	}
+            var res = sip.makeResponse(req, 200, 'OK')
+            sip_stack.send(res)
+            console.log('Got BYE')
+            setTimeout(() => {
+                process.exit(0)
+            }, 1000)
+
+            return
+        }
+
+        sip_stack.send(sip.makeResponse(req, 405, "Method not allowed"))
+    }
 )
 
 const sip_uri = `sip:${server_sip_host}:${server_sip_port}`
 
 var output_file = null
 if(args.w) {
-	output_file = new FileWriter(args.w, {
-		sampleRate: 8000,
-		channels: 1,
-		signed: true,
-	})
+    output_file = new FileWriter(args.w, {
+        sampleRate: 8000,
+        channels: 1,
+        signed: true,
+    })
 }
 
 if(args.t) {
@@ -142,159 +150,159 @@ if(args.t) {
 }
 
 sip_stack.send(
-	{
-		method: 'INVITE',
-		uri: sip_uri,
-		headers: {
-			to: {uri: sip_uri},
-			from: {uri: `sip:mrcp_client@${local_ip}:${local_sip_port}`, params: {tag: utils.rstring()}},
-			'call-id': call_id,
-			cseq: {method: 'INVITE', seq: Math.floor(Math.random() * 1e5)},
-			'content-type': 'application/sdp',
-			contact: [{uri: `sip:mrcp_client@${local_ip}:${local_sip_port}`}],
-		},
-		content: mrcp_utils.gen_offer_sdp(resource_type, local_ip, local_rtp_port),
-	},
-	function(rs) {
-		console.log(rs)
+    {
+        method: 'INVITE',
+        uri: sip_uri,
+        headers: {
+            to: {uri: sip_uri},
+            from: {uri: `sip:mrcp_client@${local_ip}:${local_sip_port}`, params: {tag: utils.rstring()}},
+            'call-id': call_id,
+            cseq: {method: 'INVITE', seq: Math.floor(Math.random() * 1e5)},
+            'content-type': 'application/sdp',
+            contact: [{uri: `sip:mrcp_client@${local_ip}:${local_sip_port}`}],
+        },
+        content: mrcp_utils.gen_offer_sdp(resource_type, local_ip, local_rtp_port),
+    },
+    function(rs) {
+        console.log(rs)
 
-		if(rs.status >= 300) {
-			console.log('call failed with status ' + rs.status)  
-		}
-		else if(rs.status < 200) {
-			console.log('call progress status ' + rs.status)
-		} else {
-			// yes we can get multiple 2xx response with different tags
-			console.log('call answered with tag ' + rs.headers.to.params.tag)
+        if(rs.status >= 300) {
+            console.log('call failed with status ' + rs.status)  
+        }
+        else if(rs.status < 200) {
+            console.log('call progress status ' + rs.status)
+        } else {
+            // yes we can get multiple 2xx response with different tags
+            console.log('call answered with tag ' + rs.headers.to.params.tag)
 
-			// sending ACK
-			sip_stack.send({
-				method: 'ACK',
-				uri: rs.headers.contact[0].uri,
-				headers: {
-					to: rs.headers.to,
-					from: rs.headers.from,
-					'call-id': call_id,
-					cseq: {method: 'ACK', seq: rs.headers.cseq.seq},
-					via: []
-				}
-			})
+            // sending ACK
+            sip_stack.send({
+                method: 'ACK',
+                uri: rs.headers.contact[0].uri,
+                headers: {
+                    to: rs.headers.to,
+                    from: rs.headers.from,
+                    'call-id': call_id,
+                    cseq: {method: 'ACK', seq: rs.headers.cseq.seq},
+                    via: []
+                }
+            })
 
-			var data = {}
+            var data = {}
 
-			try {
-				var answer_sdp = mrcp_utils.parse_sdp(rs.content)
-				console.log(answer_sdp)
-				if(!mrcp_utils.answer_sdp_matcher(answer_sdp, data)) {
-					console.error("Could not get correct SDP answer")
-					process.exit(1)
-				}
+            try {
+                var answer_sdp = mrcp_utils.parse_sdp(rs.content)
+                console.log(answer_sdp)
+                if(!mrcp_utils.answer_sdp_matcher(answer_sdp, data)) {
+                    console.error("Could not get correct SDP answer")
+                    process.exit(1)
+                }
 
-				rtp_session.set_remote_end_point(data.remote_ip, data.remote_rtp_port)
+                rtp_session.set_remote_end_point(data.remote_ip, data.remote_rtp_port)
 
-				rtp_session.on('data', data => {
-					//console.log('rtp packet')
+                rtp_session.on('data', data => {
+                    //console.log('rtp packet')
 
-					var buf = Buffer.alloc(data.length * 2)
+                    var buf = Buffer.alloc(data.length * 2)
 
-					for(var i=0 ; i<data.length ; i++) {
-						// convert ulaw to L16 little-endian
-						var l = lu.ulaw2linear(data[i])
-						buf[i*2] = l & 0xFF
-						buf[i*2+1] = l >>> 8
-					}
+                    for(var i=0 ; i<data.length ; i++) {
+                        // convert ulaw to L16 little-endian
+                        var l = lu.ulaw2linear(data[i])
+                        buf[i*2] = l & 0xFF
+                        buf[i*2+1] = l >>> 8
+                    }
 
-					speaker.write(buf)
+                    speaker.write(buf)
 
-					if(output_file) {
-						output_file.write(buf)
-					}
-				})
+                    if(output_file) {
+                        output_file.write(buf)
+                    }
+                })
 
-				var client = mrcp.createClient({
-					host: data.remote_ip,
-					port: data.remote_mrcp_port,
-				})
+                var client = mrcp.createClient({
+                    host: data.remote_ip,
+                    port: data.remote_mrcp_port,
+                })
 
-				var request_id = 1
+                var request_id = 1
 
-				var msg = utils.build_mrcp_request('SPEAK', request_id, data.channel, args)
-				console.log('Sending MRCP requests. result: ', client.write(msg))
-				request_id++
+                var msg = utils.build_mrcp_request('SPEAK', request_id, data.channel, args)
+                console.log('Sending MRCP requests. result: ', client.write(msg))
+                request_id++
 
-				client.on('error', (err) => {
-					console.error(err)
-					process.exit(1)
-				})
+                client.on('error', (err) => {
+                    console.error(err)
+                    process.exit(1)
+                })
 
-				client.on('close', () => { console.log('mrcp client closed') })
+                client.on('close', () => { console.log('mrcp client closed') })
 
-				client.on('data', data => {
-					console.log('***********************************************')
-					console.log('mrcp on data:')
-					console.log(data)
-					console.log()
+                client.on('data', data => {
+                    console.log('***********************************************')
+                    console.log('mrcp on data:')
+                    console.log(data)
+                    console.log()
 
-					if (data.type == 'response' && data.status_code == 200) {
-						console.log("command accepted")
+                    if (data.type == 'response' && data.status_code == 200) {
+                        console.log("command accepted")
 
-						// Simulating client disconnection during speak
-						/*
-						setTimeout(() => {
-							sip_stack.send({
-								method: 'BYE',
-								uri: rs.headers.contact[0].uri,
-								headers: {
-									to: rs.headers.to,
-									from: rs.headers.from,
-									'call-id': call_id,
-									cseq: {method: 'BYE', seq: rs.headers.cseq.seq + 1},
-									via: []
-								}
-							}, (res) => {
-									console.log(`BYE got: ${res.status} ${res.reason}`)	
-									process.exit(0)
-							})
-						}, 500)
-						*/
-					} else if (data.type == 'event' && data.event_name == 'SPEAK-COMPLETE') {
-						// sending BYE
-						setTimeout(() => {
-							sip_stack.send({
-								method: 'BYE',
-								uri: rs.headers.contact[0].uri,
-								headers: {
-									to: rs.headers.to,
-									from: rs.headers.from,
-									'call-id': call_id,
-									cseq: {method: 'BYE', seq: rs.headers.cseq.seq + 1},
-									via: []
-								}
-							}, (res) => {
-									console.log(`BYE got: ${res.status} ${res.reason}`)	
-									if(output_file) {
-										setTimeout(() => {
-											output_file.end(res => {
-												process.exit(0)
-											})
-										}, 1000)
-									} else {
-										setTimeout(() => {
-											process.exit(0)
-										}, 1000)
-									}
-							})
-						}, 500)
-					} else {
-						console.log("unexpected data")
-						console.dir(data)
-					}
+                        // Simulating client disconnection during speak
+                        /*
+                        setTimeout(() => {
+                            sip_stack.send({
+                                method: 'BYE',
+                                uri: rs.headers.contact[0].uri,
+                                headers: {
+                                    to: rs.headers.to,
+                                    from: rs.headers.from,
+                                    'call-id': call_id,
+                                    cseq: {method: 'BYE', seq: rs.headers.cseq.seq + 1},
+                                    via: []
+                                }
+                            }, (res) => {
+                                    console.log(`BYE got: ${res.status} ${res.reason}`)    
+                                    process.exit(0)
+                            })
+                        }, 500)
+                        */
+                    } else if (data.type == 'event' && data.event_name == 'SPEAK-COMPLETE') {
+                        // sending BYE
+                        setTimeout(() => {
+                            sip_stack.send({
+                                method: 'BYE',
+                                uri: rs.headers.contact[0].uri,
+                                headers: {
+                                    to: rs.headers.to,
+                                    from: rs.headers.from,
+                                    'call-id': call_id,
+                                    cseq: {method: 'BYE', seq: rs.headers.cseq.seq + 1},
+                                    via: []
+                                }
+                            }, (res) => {
+                                    console.log(`BYE got: ${res.status} ${res.reason}`)    
+                                    if(output_file) {
+                                        setTimeout(() => {
+                                            output_file.end(res => {
+                                                process.exit(0)
+                                            })
+                                        }, 1000)
+                                    } else {
+                                        setTimeout(() => {
+                                            process.exit(0)
+                                        }, 1000)
+                                    }
+                            })
+                        }, 500)
+                    } else {
+                        console.log("unexpected data")
+                        console.dir(data)
+                    }
 
-				})
-			} catch(e) {
-				console.error(`Failure when process answer SDP: ${e}`)
-				process.exit(1)
-			}
-		}
-	}
+                })
+            } catch(e) {
+                console.error(`Failure when process answer SDP: ${e}`)
+                process.exit(1)
+            }
+        }
+    }
 )
