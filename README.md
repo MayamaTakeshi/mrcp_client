@@ -67,6 +67,11 @@ node speechsynth_client.js 127.0.0.1 8070 dtmf dtmf 1234567890abcd*#
 node speechrecog_client.js 127.0.0.1 8070 dtmf artifacts/dtmf.0123456789ABCDEF.16000hz.wav artifacts/grammar_empty.xml
 ```
 
+or Morse Code:
+```
+node speechsynth_client.js 127.0.0.1 8070 morse morse 'stop and smell the roses'
+```
+
 ## Load testing
 
 While this tool was not developed with load testing in mind, if you need to make several calls to your MRCP server you can do it with something like this for speechsynth:
