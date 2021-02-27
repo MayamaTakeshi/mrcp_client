@@ -200,14 +200,14 @@ sip_stack.send(
 
                 rtp_session.set_remote_end_point(data.remote_ip, data.remote_rtp_port)
 
-                rtp_session.on('data', data => {
+                rtp_session.on('data', payload => {
                     //console.log('rtp packet')
 
-                    var buf = Buffer.alloc(data.length * 2)
+                    var buf = Buffer.alloc(payload.length * 2)
 
-                    for(var i=0 ; i<data.length ; i++) {
+                    for(var i=0 ; i<payload.length ; i++) {
                         // convert ulaw to L16 little-endian
-                        var l = lu.ulaw2linear(data[i])
+                        var l = lu.ulaw2linear(payload[i])
                         buf[i*2] = l & 0xFF
                         buf[i*2+1] = l >>> 8
                     }
