@@ -47,14 +47,14 @@ const alloc_free_port = async (port_numbers, addr) => {
 const alloc_rtp_session = (local_rtp_port, local_ip) => {
     const rtp_session = new RtpSession({})
 
-    var rtp_port_range
+    var rtp_ports
     if(local_rtp_port) {
-        rtp_port_range = [local_rtp_port]
+        rtp_ports = [local_rtp_port]
     } else {
-        rtp_port_range = _.range(10000, 65535, 2)
+        rtp_ports = _.shuffle(_.range(10000, 65535, 2))
     }
 
-    var p = alloc_free_port(rtp_port_range, local_ip)
+    var p = alloc_free_port(rtp_ports, local_ip)
 
     socket = deasyncPromise(p)
     if(!socket) {
