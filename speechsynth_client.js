@@ -85,10 +85,29 @@ if(!rtp_session) {
 
 local_rtp_port = rtp_session._info.local_port
 
+var output_file = null
+
+const terminate = (status) => {
+    if(output_file) {
+        setTimeout(() => {
+            output_file.end(res => {
+                process.exit(status)
+            })
+        }, 1000)
+    } else {
+        setTimeout(() => {
+            process.exit(status)
+        }, 1000)
+    }
+}
+
+    
+
 rtp_session.on('error', (err) => {
     console.error(err)
-    process.exit(1)
+    terminate(1)
 })
+
 
 var free_sip_port = utils.find_free_sip_port(local_sip_port, local_ip)
 if(!free_sip_port) {
@@ -119,9 +138,7 @@ const sip_stack = sip.create({
             console.log('Got BYE')
             var res = sip.makeResponse(req, 200, 'OK')
             sip_stack.send(res)
-            setTimeout(() => {
-                process.exit(0)
-            }, 1000)
+            terminate(0)
 
             return
         }
@@ -132,7 +149,6 @@ const sip_stack = sip.create({
 
 const sip_uri = `sip:${server_sip_host}:${server_sip_port}`
 
-var output_file = null
 if(args.w) {
     output_file = new FileWriter(args.w, {
         sampleRate: 8000,
@@ -145,7 +161,7 @@ if(args.t) {
     var timeout = parseInt(args.t)
     setTimeout(() => {
         console.log("timeout. Terminating")
-        process.exit(1)
+        terminate(1)
     }, timeout)
 }
 
@@ -195,7 +211,7 @@ sip_stack.send(
                 console.log(answer_sdp)
                 if(!mrcp_utils.answer_sdp_matcher(answer_sdp, data)) {
                     console.error("Could not get correct SDP answer")
-                    process.exit(1)
+                    terminate(1)
                 }
 
                 rtp_session.set_remote_end_point(data.remote_ip, data.remote_rtp_port)
@@ -232,7 +248,7 @@ sip_stack.send(
 
                 client.on('error', (err) => {
                     console.error(err)
-                    process.exit(1)
+                    terminate(1)
                 })
 
                 client.on('close', () => { console.log('mrcp client closed') })
@@ -261,7 +277,7 @@ sip_stack.send(
                                 }
                             }, (res) => {
                                     console.log(`BYE got: ${res.status} ${res.reason}`)    
-                                    process.exit(0)
+                                    terminate(0)
                             })
                         }, 500)
                         */
@@ -280,17 +296,7 @@ sip_stack.send(
                                 }
                             }, (res) => {
                                     console.log(`BYE got: ${res.status} ${res.reason}`)    
-                                    if(output_file) {
-                                        setTimeout(() => {
-                                            output_file.end(res => {
-                                                process.exit(0)
-                                            })
-                                        }, 1000)
-                                    } else {
-                                        setTimeout(() => {
-                                            process.exit(0)
-                                        }, 1000)
-                                    }
+                                    terminate(0)
                             })
                         }, 500)
                     } else {
@@ -301,7 +307,7 @@ sip_stack.send(
                 })
             } catch(e) {
                 console.error(`Failure when process answer SDP: ${e}`)
-                process.exit(1)
+                terminate(1)
             }
         }
     }
