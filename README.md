@@ -80,7 +80,7 @@ node speechsynth_client.js 127.0.0.1 8070 en-US en-US-Standard-C "<speak><prosod
 
 node speechsynth_client.js 127.0.0.1 8070 dtmf dtmf '<speak><prosody rate="50ms">1234</prosody><break time="500ms"/><prosody rate="100ms">1234</prosody></speak>'
 
-node speechsynth_client.js 127.0.0.1 8070 morse C4 '<speak><prosody rate="50wpm">Save Our Souls</prosody><break time="1ms"/><prosody rate="70wpm">SOS SOS SOS</prosody></speak>'
+node speechsynth_client.js 127.0.0.1 8070 morse C4 '<speak><prosody rate="50wpm">Save Our Souls</prosody><break time="500ms"/><prosody rate="70wpm">SOS SOS SOS</prosody></speak>'
 
 ```
 
