@@ -21,12 +21,11 @@ const speaker = new Speaker({
     endianness: 'LE',
     channels: 1,
     sampleRate: 8000,
+    byteRate: 16000,
     blockAlign: 2,
     bitDepth: 16,
-    signed: true,
+    signed: true
 })
-
-
 
 const usage = () => {
     console.log(`
@@ -82,6 +81,7 @@ if(!rtp_session) {
     console.error("Failed to allocate rtp_session")
     process.exit(1)
 }
+
 
 local_rtp_port = rtp_session._info.local_port
 
@@ -165,6 +165,14 @@ if(args.t) {
     }, timeout)
 }
 
+var buffer = []
+
+// add some initial silence to avoid speaker underflow
+for(var i=0 ; i<32 ; i++) {
+    var buf = Buffer(new Array(320))
+    buffer.push(buf)
+}
+
 sip_stack.send(
     {
         method: 'INVITE',
@@ -228,7 +236,14 @@ sip_stack.send(
                         buf[i*2+1] = l >>> 8
                     }
 
-                    speaker.write(buf)
+                    buffer.push(buf)
+
+                    var res = buffer.shift()
+
+                    while(res) {
+                        speaker.write(res)
+                        res = buffer.shift()
+                    }
 
                     if(output_file) {
                         output_file.write(buf)
