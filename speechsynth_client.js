@@ -6,30 +6,18 @@ const deasyncPromise = require('deasync-promise')
 const mrcp = require('mrcp')
 const mrcp_utils = require('mrcp-utils')
 
-const Speaker = require('speaker')
 const FileWriter = require('wav').FileWriter
 
 const utils = require('./utils')
 const lu = require('./linear_ulaw')
 
-const args = require('yargs').argv
+const args = require('yargs').boolean('S').argv
 
 const uuid = require('uuid')
 
-const speaker = new Speaker({
-    audioFormat: 1,
-    endianness: 'LE',
-    channels: 1,
-    sampleRate: 8000,
-    byteRate: 16000,
-    blockAlign: 2,
-    bitDepth: 16,
-    signed: true
-})
-
 const usage = () => {
     console.log(`
-Usage:    node ${args.$0} [-w output_file] [-t timeout] server_sip_host server_sip_port language voice text_or_file
+Usage:    node ${args.$0} [-w output_file] [-t timeout] [-S] server_sip_host server_sip_port language voice text_or_file
 
 Examples: node ${args.$0} 127.0.0.1 8070 ja-JP ja-JP-Wavenet-A "おはようございます."
           node ${args.$0} 127.0.0.1 8070 ja-JP ja-JP-Wavenet-A @some_file.txt
@@ -37,12 +25,14 @@ Examples: node ${args.$0} 127.0.0.1 8070 ja-JP ja-JP-Wavenet-A "おはようご�
 Details:
           -w output_file: indicates if received speech should be written to a wav file 
           -t timeout: timeout in milliseconds to wait for operation to complete 
+          -S: disable playing audio to speaker (necessary if you are using a machine without audio device)      
           text_or_file: the text to be converted to speech. If it starts with @, it will indicate a file containing the text to be converted.
 `)
 }
 
 
 if(args._.length != 5) {
+    console.log(args._)
     console.error("Invalid number of arguments")
     usage()
     process.exit(1)
@@ -165,12 +155,31 @@ if(args.t) {
     }, timeout)
 }
 
-var buffer = []
+var speaker = null
+var buffer = null
 
-// add some initial silence to avoid speaker underflow
-for(var i=0 ; i<32 ; i++) {
-    var buf = Buffer(new Array(320))
-    buffer.push(buf)
+if(!args.S) {
+    console.log("Setting up speaker")
+
+    const Speaker = require('speaker')
+    speaker = new Speaker({
+        audioFormat: 1,
+        endianness: 'LE',
+        channels: 1,
+        sampleRate: 8000,
+        byteRate: 16000,
+        blockAlign: 2,
+        bitDepth: 16,
+        signed: true
+    })
+
+    buffer = []
+
+    // add some initial silence to avoid speaker underflow
+    for(var i=0 ; i<32 ; i++) {
+        var buf = Buffer(new Array(320))
+        buffer.push(buf)
+    }
 }
 
 sip_stack.send(
@@ -236,13 +245,15 @@ sip_stack.send(
                         buf[i*2+1] = l >>> 8
                     }
 
-                    buffer.push(buf)
+                    if(speaker) {
+                        buffer.push(buf)
 
-                    var res = buffer.shift()
+                        var res = buffer.shift()
 
-                    while(res) {
-                        speaker.write(res)
-                        res = buffer.shift()
+                        while(res) {
+                            speaker.write(res)
+                            res = buffer.shift()
+                        }
                     }
 
                     if(output_file) {
