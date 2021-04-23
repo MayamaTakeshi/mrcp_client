@@ -89,6 +89,7 @@ if(!free_sip_port) {
 
 local_sip_port = free_sip_port
 
+console.log(`Local SIP address: ${local_ip}:${local_sip_port}`)
 
 const sip_stack = sip.create({
         address: local_ip,
