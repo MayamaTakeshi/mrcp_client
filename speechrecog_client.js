@@ -203,7 +203,7 @@ sip_stack.send(
 
                 client.on('data', d => {
                     console.log('***********************************************')
-                    console.log('mrcp on data:')
+                    console.log(`${new Date()} mrcp on data:`)
                     console.log(d)
                     console.log()
 
