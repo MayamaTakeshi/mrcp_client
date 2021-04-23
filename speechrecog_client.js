@@ -89,7 +89,7 @@ if(!free_sip_port) {
 
 local_sip_port = free_sip_port
 
-console.log(`Local SIP address: ${local_ip}:${local_sip_port}`)
+console.log(`Local  SIP address: ${local_ip}:${local_sip_port}`)
 
 const sip_stack = sip.create({
         address: local_ip,
@@ -119,6 +119,8 @@ const sip_stack = sip.create({
 )
 
 const sip_uri = `sip:${server_sip_host}:${server_sip_port}`
+
+console.log(`Remote SIP address: ${sip_uri}`)
 
 sip_stack.send(
     {
