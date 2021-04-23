@@ -24,7 +24,7 @@ npm install
 Then create config file:
 ```
 cp config/default.js.sample config/default.js
-vim config/default.js # adjust parameters as necessary (minimally, set the local_ip)
+vim config/default.js # adjust parameters if necessary.
 ```
 
 ## Testing

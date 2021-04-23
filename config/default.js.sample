@@ -1,5 +1,5 @@
 module.exports = {
-	local_ip: '192.168.0.109',
+	local_ip: '127.0.0.1',
 	local_sip_port: null, // set this to a specific value if desired (otherwise, we will try to find a free port starting from 5060)
 	local_rtp_port: null, // set this to a specific value if desired (otherwise, we will try to find a free port starting from 10000)
 }
