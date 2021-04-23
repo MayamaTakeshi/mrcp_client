@@ -50,6 +50,11 @@ or like this to save audio to a wav file:
 ```
 node speechsynth_client.js -w generated_speech.wav 127.0.0.1 8070 en-US en-US-Wavenet-E "Hello World."
 ```
+And your machine doesn't have an audio device (no speaker), disable local audio generation by passing option -S:
+```
+node speechsynth_client.js -S -w generated_speech.wav 127.0.0.1 8070 en-US en-US-Wavenet-E "Hello World."
+```
+
 
 To test Google Speech Recognition:
 ```
