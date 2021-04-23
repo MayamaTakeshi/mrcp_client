@@ -58,21 +58,26 @@ node speechsynth_client.js -S -w generated_speech.wav 127.0.0.1 8070 en-US en-US
 
 To test Google Speech Recognition:
 ```
-node speechrecog_client.js 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav artifacts/grammar.xml
+node speechrecog_client.js 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav
 ```
+To test with hints (grammar file) to boost accuracy, use option -g:
+```
+node speechrecog_client.js -g artifacts/grammar.xml 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav
+```
+
 
 If you use mrcp_server and don't have Google credentials, you can test using DTMF:
 ```
 node speechsynth_client.js 127.0.0.1 8070 dtmf dtmf 1234567890abcd*#
 
-node speechrecog_client.js 127.0.0.1 8070 dtmf artifacts/dtmf.0123456789ABCDEF.16000hz.wav artifacts/grammar_empty.xml
+node speechrecog_client.js 127.0.0.1 8070 dtmf artifacts/dtmf.0123456789ABCDEF.16000hz.wav
 ```
 
 or Morse Code:
 ```
 node speechsynth_client.js 127.0.0.1 8070 morse 440hz 'stop and smell the roses'
 
-node speechrecog_client.js 127.0.0.1 8070 morse artifacts/morse.stop_and_smell_the_roses.wav artifacts/grammar.xml
+node speechrecog_client.js 127.0.0.1 8070 morse artifacts/morse.stop_and_smell_the_roses.wav
 
 ```
 
@@ -98,7 +103,7 @@ NUMBER_OF_CALLS=10; for i in $(seq 1 $NUMBER_OF_CALLS);do node speechsynth_clien
 ```
 or this for speechrecog:
 ```
-NUMBER_OF_CALLS=10; for i in $(seq 1 $NUMBER_OF_CALLS);do node speechrecog_client.js 127.0.0.1 8070 dtmf artifacts/dtmf.0123456789ABCDEF.16000hz.wav artifacts/grammar_empty.xml & sleep 0.1; done
+NUMBER_OF_CALLS=10; for i in $(seq 1 $NUMBER_OF_CALLS);do node speechrecog_client.js 127.0.0.1 8070 dtmf artifacts/dtmf.0123456789ABCDEF.16000hz.wav & sleep 0.1; done
 ```
 
   Obs: the "sleep 0.1" is necessary to minimize the risk of failing to allocate the UDP port for the SIP stack due to a shortcoming in the sip.js library we are using. Ref: https://github.com/kirm/sip.js/issues/147
@@ -109,7 +114,7 @@ NUMBER_OF_CALLS=10; while [[ 1 ]];do for i in $(seq 1 $NUMBER_OF_CALLS);do node 
 ```
 or this for speechrecog:
 ```
-NUMBER_OF_CALLS=10; while [[ 1 ]];do for i in $(seq 1 $NUMBER_OF_CALLS);do node speechrecog_client.js -t 5000 127.0.0.1 8070 dtmf artifacts/dtmf.0123456789ABCDEF.16000hz.wav artifacts/grammar_empty.xml & sleep 0.1; done; sleep 4; done
+NUMBER_OF_CALLS=10; while [[ 1 ]];do for i in $(seq 1 $NUMBER_OF_CALLS);do node speechrecog_client.js -t 5000 127.0.0.1 8070 dtmf artifacts/dtmf.0123456789ABCDEF.16000hz.wav & sleep 0.1; done; sleep 4; done
 ```
 
 Obs: be careful when load testing an MRCP server that uses paid speech services like Google Speech, Amazon Polly etc as you might get a large bill if you forget the load test running for very long.

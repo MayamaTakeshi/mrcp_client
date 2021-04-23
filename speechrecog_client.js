@@ -16,16 +16,17 @@ const uuid = require('uuid')
 
 const usage = () => {
     console.log(`
-Usage: node ${args.$0} [-t timeout] server_sip_host server_sip_port language audio_file grammar_file
-Ex:    node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav artifacts/grammar.xml
+Usage: node ${args.$0} [-t timeout] [-g grammar_file] server_sip_host server_sip_port language audio_file
+Ex:    node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav 
 
 Details:
        -t timeout: timeout in milliseconds to wait for the operation to complete
+       -g grammar_file: xml file containing grammar definition (hints)
 `)
 }
 
 
-if(args._.length != 5) {
+if(args._.length != 4) {
     console.error("Invalid number of arguments")
     usage()
     process.exit(1)
@@ -35,7 +36,6 @@ const server_sip_host = args._[0]
 const server_sip_port = args._[1]
 const language = args._[2]
 const audio_file = args._[3]
-const grammar_file = args._[4]
 
 const resource_type = 'speechrecog'
 
@@ -47,7 +47,7 @@ args.content_id = content_id
 
 const buffer = new Buffer(160)
 
-const grammar = fs.readFileSync(grammar_file, {encoding:'utf8', flag:'r'})
+var grammar = null
 
 //var mic = new Mic()
 var mic = null
@@ -62,6 +62,11 @@ if(args.t) {
         console.log("timeout. Terminating")
         process.exit(1)
     }, timeout)
+}
+
+if(args.g) {
+    var grammar_file = args.g
+    grammar = fs.readFileSync(grammar_file, {encoding:'utf8', flag:'r'})
 }
 
 const rtp_session = utils.alloc_rtp_session(local_rtp_port, local_ip)
@@ -185,17 +190,27 @@ sip_stack.send(
                     process.exit(1)
                 })
 
-                var define_grammar_request_id
-                var recognize_request_id
+                var define_grammar_request_id = null
 
-                var define_grammar_msg = utils.build_mrcp_request('DEFINE-GRAMMAR', request_id, data.channel, {
-                    'content_id': content_id,
-                    'grammar': grammar,
-                })
+                if(grammar) {
+                    var define_grammar_msg = utils.build_mrcp_request('DEFINE-GRAMMAR', request_id, data.channel, {
+                        'content_id': content_id,
+                        'grammar': grammar,
+                    })
 
-                console.log('Sending MRCP DEFINE-GRAMMAR request. result: ', client.write(define_grammar_msg))
-                define_grammar_request_id = request_id
-                request_id++
+                    console.log('Sending MRCP DEFINE-GRAMMAR request. result: ', client.write(define_grammar_msg))
+                    define_grammar_request_id = request_id
+                    request_id++
+                } else {
+                    var recognize_msg = utils.build_mrcp_request('RECOGNIZE', request_id, data.channel, {
+                        'language': language,
+                        'content_id': content_id,
+                    })
+
+                    console.log('Sending MRCP RECOGNIZE request. result: ', client.write(recognize_msg))
+                    recognize_request_id = request_id
+                    request_id++
+                }
 
                 var tid
 
@@ -207,7 +222,6 @@ sip_stack.send(
                     console.log(d)
                     console.log()
 
-            
                     if(d.type == 'response' && d.request_id == define_grammar_request_id && d.status_code == 200) { 
                         var recognize_msg = utils.build_mrcp_request('RECOGNIZE', request_id, data.channel, {
                             'language': language,
