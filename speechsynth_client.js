@@ -176,7 +176,7 @@ if(!args.S) {
     buffer = []
 
     // add some initial silence to avoid speaker underflow
-    for(var i=0 ; i<32 ; i++) {
+    for(var i=0 ; i<64 ; i++) {
         var buf = Buffer(new Array(320))
         buffer.push(buf)
     }
