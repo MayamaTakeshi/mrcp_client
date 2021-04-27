@@ -21,11 +21,12 @@ Ex:    node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav
        node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav @artifacts/grammar.xml 
        node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe 
        node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav "builtin:speech/transcribe\\nbuiltin:dtmf/digits"
+       node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav "builtin:speech/transcribe\\nbuiltin:dtmf/digits\\nbuiltin:speech/directory"
 
 Details:
        -t timeout: timeout in milliseconds to wait for the operation to complete
        audio_file: wav file containing audio with speech to be recognized
-       grammar: grammar to be used or @xml_file containing grammar definition (hints)
+       grammar: grammar(s) to be used or @xml_file containing grammar definition (hints)
 `)
 }
 
@@ -58,7 +59,7 @@ if(grammar.startsWith("@")) {
     grammar_file = grammar.slice(1)
     grammar = fs.readFileSync(grammar_file, {encoding:'utf8', flag:'r'})
 } else {
-    grammar = grammar.replace('\\n', '\n')
+    grammar = grammar.replace(/\\n/g, '\n')
 }
 
 //var mic = new Mic()
