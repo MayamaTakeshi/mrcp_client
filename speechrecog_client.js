@@ -21,7 +21,7 @@ Usage: node ${args.$0} [-t timeout] [-r extra_recognize_headers] server_sip_host
     node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe 
     node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav "builtin:speech/transcribe\\nbuiltin:dtmf/digits"
     node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav "builtin:speech/transcribe\\nbuiltin:dtmf/digits\\nbuiltin:speech/directory"
-    node ${args.$0} -r "Start-Input-Timers: false\\nNo-Input-Timeout: 7000" 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe 
+    node ${args.$0} -r "Recognition-Timeout: 5000\\nNo-Input-Timeout: 7000" 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe 
 
 Details:
     audio_file: wav file containing audio with speech to be recognized
