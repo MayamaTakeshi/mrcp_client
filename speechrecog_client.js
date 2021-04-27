@@ -16,17 +16,18 @@ const uuid = require('uuid')
 
 const usage = () => {
     console.log(`
-Usage: node ${args.$0} [-t timeout] server_sip_host server_sip_port language audio_file grammar
-Ex:    node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav 
-       node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav @artifacts/grammar.xml 
-       node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe 
-       node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav "builtin:speech/transcribe\\nbuiltin:dtmf/digits"
-       node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav "builtin:speech/transcribe\\nbuiltin:dtmf/digits\\nbuiltin:speech/directory"
+Usage: node ${args.$0} [-t timeout] [-r extra_recognize_headers] server_sip_host server_sip_port language audio_file grammar
+    node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav @artifacts/grammar.xml 
+    node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe 
+    node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav "builtin:speech/transcribe\\nbuiltin:dtmf/digits"
+    node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav "builtin:speech/transcribe\\nbuiltin:dtmf/digits\\nbuiltin:speech/directory"
+    node ${args.$0} -r "Start-Input-Timers: false\\nNo-Input-Timeout: 7000" 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe 
 
 Details:
-       -t timeout: timeout in milliseconds to wait for the operation to complete
-       audio_file: wav file containing audio with speech to be recognized
-       grammar: grammar(s) to be used or @xml_file containing grammar definition (hints)
+    audio_file: wav file containing audio with speech to be recognized
+    grammar: grammar(s) to be used or @xml_file containing grammar definition (hints)
+    -t timeout: timeout in milliseconds to wait for the operation to complete
+    -r extra_recognize_headers: extra headers to be added to message RECOGNIZE
 `)
 }
 
@@ -69,6 +70,8 @@ var local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
 var local_sip_port = config.local_sip_port
 var local_rtp_port = config.local_rtp_port
 
+var extra_recognize_headers = {}
+
 if(args.t) {
     var timeout = parseInt(args.t)
     setTimeout(() => {
@@ -77,6 +80,15 @@ if(args.t) {
     }, timeout)
 }
 
+if(args.r) {
+    var tokens = args.r.split("\\n")
+    tokens.forEach(token => {
+        var kv = token.split(":")    
+        var key = kv[0].trim()
+        var val = kv[1].trim()
+        extra_recognize_headers[key] = val
+    })
+}
 
 const rtp_session = utils.alloc_rtp_session(local_rtp_port, local_ip)
 if(!rtp_session) {
@@ -214,11 +226,11 @@ sip_stack.send(
                     define_grammar_request_id = request_id
                     request_id++
                 } else {
-                    var recognize_msg = mrcp.builder.build_request('RECOGNIZE', request_id, {
+                    var recognize_msg = mrcp.builder.build_request('RECOGNIZE', request_id, _.extend({
                         'channel-identifier': data.channel,
                         'speech-language': language,
 		                'content-type': 'text/uri-list',
-                    }, grammar)
+                    }, extra_recognize_headers), grammar)
 
                     console.log('Sending MRCP RECOGNIZE request. result: ', client.write(recognize_msg))
                     recognize_request_id = request_id
@@ -236,11 +248,11 @@ sip_stack.send(
                     console.log()
 
                     if(d.type == 'response' && d.request_id == define_grammar_request_id && d.status_code == 200) { 
-                        var recognize_msg = mrcp.builder.build_request('RECOGNIZE', request_id, {
+                        var recognize_msg = mrcp.builder.build_request('RECOGNIZE', request_id, _.extend({
                             'channel-identifier': data.channel,
                             'speech-language': language,
 		                    'content-type': 'text/uri-list',
-                        }, 'session:' + content_id)
+                        }, extra_recognize_headers), 'session:' + content_id)
                         console.log('Sending MRCP RECOGNIZE request. result: ', client.write(recognize_msg))
                         recognize_request_id = request_id
                         request_id++
