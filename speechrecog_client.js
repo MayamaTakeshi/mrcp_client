@@ -20,6 +20,7 @@ Usage: node ${args.$0} [-t timeout] server_sip_host server_sip_port language aud
 Ex:    node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav 
        node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav @artifacts/grammar.xml 
        node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe 
+       node ${args.$0} 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav "builtin:speech/transcribe\\nbuiltin:dtmf/digits"
 
 Details:
        -t timeout: timeout in milliseconds to wait for the operation to complete
@@ -56,6 +57,8 @@ var grammar_file = null
 if(grammar.startsWith("@")) {
     grammar_file = grammar.slice(1)
     grammar = fs.readFileSync(grammar_file, {encoding:'utf8', flag:'r'})
+} else {
+    grammar = grammar.replace('\\n', '\n')
 }
 
 //var mic = new Mic()
