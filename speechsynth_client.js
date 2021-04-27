@@ -269,7 +269,10 @@ sip_stack.send(
 
                 var request_id = 1
 
-                var msg = utils.build_mrcp_request('SPEAK', request_id, data.channel, args)
+                var msg = mrcp.builder.build_request('SPEAK', request_id, {
+                    'channel-identifier': data.channel,
+		            'content-type': args.text.indexOf('<speak>') >= 0 ? 'application/ssml+xml' : 'text/plain',
+                }, args.text)
                 console.log('Sending MRCP requests. result: ', client.write(msg))
                 request_id++
 
