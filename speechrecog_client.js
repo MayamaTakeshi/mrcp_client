@@ -82,12 +82,14 @@ if(args.t) {
 
 if(args.r) {
     var tokens = args.r.split("\\n")
-    tokens.forEach(token => {
-        var kv = token.split(":")    
-        var key = kv[0].trim()
-        var val = kv[1].trim()
+    for(var i=0 ; i<tokens.length ; i++) { 
+        var token = tokens[i]
+        var colon_pos = token.indexOf(":")
+        if(colon_pos < 0) break
+        var key = token.slice(0, colon_pos).trim()
+        var val = token.slice(colon_pos + 1).trim()
         extra_recognize_headers[key] = val
-    })
+    }
 }
 
 const rtp_session = utils.alloc_rtp_session(local_rtp_port, local_ip)
