@@ -271,6 +271,7 @@ sip_stack.send(
 
                 var msg = mrcp.builder.build_request('SPEAK', request_id, {
                     'channel-identifier': data.channel,
+                    'speech-language': language,
 		            'content-type': args.text.indexOf('<speak>') >= 0 ? 'application/ssml+xml' : 'text/plain',
                 }, args.text)
                 console.log('Sending MRCP requests. result: ', client.write(msg))
