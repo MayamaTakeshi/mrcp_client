@@ -309,7 +309,8 @@ sip_stack.send(
                                             clearInterval(tid)
 
                                             for(i=0 ;i<160; i++) {
-                                                buffer[i] = 0x7F
+                                                //buffer[i] = 0x7F
+                                                buffer[i] = 0xFF
                                             }
 
                                             tid = setInterval(() => {

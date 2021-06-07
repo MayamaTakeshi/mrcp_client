@@ -32,3 +32,14 @@ $ sox ohayou_gozaimasu.wav -r 8000 -t raw -e mu-law ohayou_gozaimasu.r-8000.e-mu
 And confirmed it is playable by doing:
 
 $ play -r 8000 -t raw -e mu-law -c 1 -r 8000 ohayou_gozaimasu.r-8000.e-mu-law.b-16.c-1.raw 
+
+==========================================================================================================
+2021/06/07 takeshi:
+
+According to https://www.giacomovacca.com/2013/05/the-sound-of-silence-encoded-with-g711.html
+Silence packet must be sent as 0xFF.
+So we updated our code (it was sending 0x7F)
+
+
+
+
