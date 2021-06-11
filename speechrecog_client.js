@@ -6,7 +6,10 @@ const deasyncPromise = require('deasync-promise')
 const mrcp = require('mrcp')
 const mrcp_utils = require('mrcp-utils')
 
-const Mic = require('node-microphone')
+const mic = require('mic')
+
+var micInstance = null
+var micInputStream = null
 
 const utils = require('./utils')
 
@@ -258,20 +261,21 @@ sip_stack.send(
                     } else if(d.type == 'response' && d.request_id == recognize_request_id && d.status_code == 200) { 
                         if(audio_file == 'MIC') {
                             var opts = {
-                                endian: 'little',
-                                bitWidth: 16,
-                                encoding: 'signed-integer',
+                                //endian: 'little',
+                                //bitWidth: 16,
+                                //encoding: 'signed-integer',
                                 rate: 8000,
                                 channels: 1,
                                 device: 'default',
                             }
 
-                            let mic = new Mic(opts)
-                            let micStream = mic.startRecording()
+                            micInstance = mic(opts)
+                            micInputStream = micInstance.getAudioStream()
+                            micInstance.start()
 
                             tid = setInterval(() => {
-                                var buffer = micStream.read(320)
-                                //console.log(`micStream buffer: ${buffer ? buffer.length : null}`)
+                                var buffer = micInputStream.read(320)
+                                //console.log(`micInputStream buffer: ${buffer ? buffer.length : null}`)
 
                                 if(buffer) {
                                     var buffer2 = Buffer.alloc(buffer.length/2)
