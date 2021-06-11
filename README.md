@@ -88,6 +88,7 @@ You can also capture audio from your microphone this way (instead of path to a w
 ```
 node speechrecog_client.js 127.0.0.1 8070 ja-JP MIC builtin:speech/transcribe
 ```
+Obs: currently MIC doesn't work properly with julius_server
 
 
 For speech synth you can use SSML:

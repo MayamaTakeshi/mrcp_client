@@ -262,9 +262,6 @@ sip_stack.send(
                     } else if(d.type == 'response' && d.request_id == recognize_request_id && d.status_code == 200) { 
                         if(audio_file == 'MIC') {
                             var opts = {
-                                //endian: 'little',
-                                //bitWidth: 16,
-                                //encoding: 'signed-integer',
                                 rate: 8000,
                                 channels: 1,
                                 device: 'default',
