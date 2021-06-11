@@ -94,6 +94,15 @@ node speechsynth_client.js 127.0.0.1 8070 morse C4 '<speak><prosody rate="50wpm"
 
 ```
 
+To test Julius Speech Recognition:
+
+You will need to install [julius_server](https://github.com/MayamaTakeshi/julius_server)
+
+Then you can test it like this:
+```
+node speechrecog_client.js -r 'recognition-engine: julius' 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe
+```
+
 
 ## Load testing
 
