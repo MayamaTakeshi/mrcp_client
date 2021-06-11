@@ -63,9 +63,6 @@ if(grammar.startsWith("@")) {
     grammar = grammar.replace(/\\n/g, '\n')
 }
 
-//var mic = new Mic()
-var mic = null
-
 var local_ip = config.local_ip ? config.local_ip : "0.0.0.0"
 var local_sip_port = config.local_sip_port
 var local_rtp_port = config.local_rtp_port
@@ -259,14 +256,31 @@ sip_stack.send(
                         recognize_request_id = request_id
                         request_id++
                     } else if(d.type == 'response' && d.request_id == recognize_request_id && d.status_code == 200) { 
-                        if(mic) {
+                        if(audio_file == 'MIC') {
+                            var opts = {
+                                endian: 'little',
+                                bitWidth: 16,
+                                encoding: 'signed-integer',
+                                rate: 8000,
+                                channels: 1,
+                                device: 'default',
+                            }
+
+                            let mic = new Mic(opts)
                             let micStream = mic.startRecording()
 
                             tid = setInterval(() => {
-                                var buffer = micStream.read(160)
-                                console.log(buffer)
+                                var buffer = micStream.read(320)
+                                //console.log(`micStream buffer: ${buffer ? buffer.length : null}`)
+
                                 if(buffer) {
-                                    rtp_session.send_payload(buffer, 0, 0)     
+                                    var buffer2 = Buffer.alloc(buffer.length/2)
+                                    for(var i=0 ; i<buffer.length/2 ; i++) {
+                                        var linear = (buffer[i*2]) + (buffer[i*2+1] << 8)
+                                        var ulaw = utils.linear2ulaw(linear)
+                                        buffer2[i] = ulaw
+                                    }
+                                    rtp_session.send_payload(buffer2, 0, 0)
                                 }
                             }, 20)
                     
