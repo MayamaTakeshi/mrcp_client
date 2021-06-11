@@ -94,9 +94,11 @@ node speechsynth_client.js 127.0.0.1 8070 morse C4 '<speak><prosody rate="50wpm"
 
 ```
 
-To test Julius Speech Recognition:
+To test Julius Speech Recognition with mrcp_server:
 
 You will need to install [julius_server](https://github.com/MayamaTakeshi/julius_server)
+
+Then update you mrcp_server/config.js with the information about the julius_server.
 
 Then you can test it like this:
 ```
