@@ -12,6 +12,7 @@ var micInstance = null
 var micInputStream = null
 
 const utils = require('./utils')
+const lu = require('./linear_ulaw')
 
 const args = require('yargs').argv
 
@@ -281,7 +282,7 @@ sip_stack.send(
                                     var buffer2 = Buffer.alloc(buffer.length/2)
                                     for(var i=0 ; i<buffer.length/2 ; i++) {
                                         var linear = (buffer[i*2]) + (buffer[i*2+1] << 8)
-                                        var ulaw = utils.linear2ulaw(linear)
+                                        var ulaw = lu.linear2ulaw(linear)
                                         buffer2[i] = ulaw
                                     }
                                     rtp_session.send_payload(buffer2, 0, 0)
