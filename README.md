@@ -113,6 +113,18 @@ node speechrecog_client.js -r 'recognition-engine: julius' 127.0.0.1 8070 ja-JP 
 ```
 
 
+To test Olaris Speech Recognition with mrcp_server:
+
+Obtain credentials for the Olaris API (https://ncr.ernie-mlg.com/)
+
+Set the credentials on the config/default.js file
+
+Then you can test it like this:
+```
+node speechrecog_client.js -r 'recognition-engine: olaris' 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe
+```
+
+
 ## Load testing
 
 While this tool was not developed with load testing in mind, if you need to make several calls to your MRCP server you can do it with something like this for speechsynth:
