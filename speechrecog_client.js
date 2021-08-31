@@ -321,7 +321,7 @@ sip_stack.send(
                                             clearInterval(tid)
                                             tid = null
                                         } else if(bytesRead == 0) {
-                                            console.log("No more data from file.")
+                                            console.log(`${new Date()} No more data from file.`)
                                             clearInterval(tid)
 
                                             console.log("Sending silence from now on")
@@ -334,7 +334,7 @@ sip_stack.send(
                                                 rtp_session.send_payload(buffer, 0, 0)     
                                             }, 20)
                                         } else {
-                                            console.log(`Fetched ${bytesRead} bytes from audio_file. Sending to MRCP server.`)
+                                            console.log(`${new Date()} Fetched ${bytesRead} bytes from audio_file. Sending to MRCP server.`)
                                             //console.log(data)
                                             rtp_session.send_payload(buffer, 0, 0)     
                                         }

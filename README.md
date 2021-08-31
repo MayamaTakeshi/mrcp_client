@@ -109,7 +109,7 @@ Then update you mrcp_server/config.js with the information about the julius_serv
 
 Then you can test it like this:
 ```
-node speechrecog_client.js -r 'recognition-engine: julius' 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe
+node speechrecog_client.js -r 'engine: julius' 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe
 ```
 
 
@@ -121,7 +121,7 @@ Set the credentials on the config/default.js file
 
 Then you can test it like this:
 ```
-node speechrecog_client.js -r 'recognition-engine: olaris' 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe
+node speechrecog_client.js -r 'engine: olaris' 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe
 ```
 
 
