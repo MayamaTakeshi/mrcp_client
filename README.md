@@ -124,6 +124,11 @@ Then you can test it like this:
 node speechrecog_client.js -r 'engine: olaris' 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe
 ```
 
+or this
+```
+node speechrecog_client.js -r 'engine: olaris' 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav @artifacts/olaris_grammar.xml
+```
+
 
 ## Load testing
 
