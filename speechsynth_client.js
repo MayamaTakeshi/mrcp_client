@@ -178,7 +178,7 @@ if(!args.S) {
 
     // add some initial silence to avoid speaker underflow
     for(var i=0 ; i<64 ; i++) {
-        var buf = Buffer(new Array(320))
+        var buf = Buffer.alloc(320)
         buffer.push(buf)
     }
 }

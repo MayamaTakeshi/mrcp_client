@@ -56,7 +56,7 @@ const content_id = uuid.v4()
 
 args.content_id = content_id
 
-const buffer = new Buffer(160)
+const buffer = new Buffer.alloc(160)
 
 var grammar_file = null
 
