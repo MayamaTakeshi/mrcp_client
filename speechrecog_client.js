@@ -232,7 +232,7 @@ sip_stack.send(
                     var recognize_msg = mrcp.builder.build_request('RECOGNIZE', request_id, _.extend({
                         'channel-identifier': data.channel,
                         'speech-language': language,
-		                'content-type': 'text/uri-list',
+                        'content-type': 'text/uri-list',
                     }, extra_recognize_headers), grammar)
 
                     console.log('Sending MRCP RECOGNIZE request. result: ', client.write(recognize_msg))
@@ -254,7 +254,7 @@ sip_stack.send(
                         var recognize_msg = mrcp.builder.build_request('RECOGNIZE', request_id, _.extend({
                             'channel-identifier': data.channel,
                             'speech-language': language,
-		                    'content-type': 'text/uri-list',
+                            'content-type': 'text/uri-list',
                         }, extra_recognize_headers), 'session:' + content_id)
                         console.log('Sending MRCP RECOGNIZE request. result: ', client.write(recognize_msg))
                         recognize_request_id = request_id
