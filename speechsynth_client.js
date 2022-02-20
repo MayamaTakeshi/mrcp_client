@@ -183,6 +183,14 @@ if(!args.S) {
     }
 }
 
+const offer_payloads = [
+    {
+        id: 0,
+        codec_name: 'PCMU',
+        clock_rate: 8000,
+    },
+]
+
 sip_stack.send(
     {
         method: 'INVITE',
@@ -195,7 +203,8 @@ sip_stack.send(
             'content-type': 'application/sdp',
             contact: [{uri: `sip:mrcp_client@${local_ip}:${local_sip_port}`}],
         },
-        content: mrcp_utils.gen_offer_sdp(resource_type, local_ip, local_rtp_port),
+
+        content: mrcp_utils.gen_offer_sdp(resource_type, local_ip, local_rtp_port, offer_payloads),
     },
     function(rs) {
         console.log(rs)
