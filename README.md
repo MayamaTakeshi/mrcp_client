@@ -102,7 +102,7 @@ To test Julius Speech Recognition with mrcp_server:
 
 You will need to install [julius_server](https://github.com/MayamaTakeshi/julius_server)
 
-Then update you mrcp_server/config.js with the information about the julius_server.
+Then update your mrcp_server/config.js with the information about the julius_server.
 
 Then you can test it like this:
 ```
@@ -124,6 +124,17 @@ node speechrecog_client.js -r 'engine: olaris' 127.0.0.1 8070 ja-JP artifacts/oh
 or this
 ```
 node speechrecog_client.js -r 'engine: olaris' 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav @artifacts/olaris_grammar.xml
+```
+
+To test Vosk Speech Recognition with mrcp_server:
+
+You will need to have vosk_server instances running somewhere
+
+Then update your mrcp_server/config.js with the information about the vosk_server instances.
+
+Then you can test it like this:
+```
+node speechrecog_client.js -r 'engine: vosk' 127.0.0.1 8070 ja-JP artifacts/ohayou_gozaimasu.wav builtin:speech/transcribe
 ```
 
 
