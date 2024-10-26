@@ -27,7 +27,7 @@
     "deasync-promise": "^1.0.1",
     "lodash": "^4.17.20",
     "mic": "^2.1.2",
-    "mrcp": "^1.3.3",
+    "mrcp": "^1.4.1",
     "mrcp-utils": "^1.4.0",
     "rtp-session": "^1.3.2",
     "sip": "github:kirm/sip.js",
